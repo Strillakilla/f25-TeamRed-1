@@ -1,13 +1,13 @@
 import { Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar.jsx";
-import GetStarted from "./Get-StartedPage.jsx";
-import Home from "./Home.jsx";
-import AccountCreation from "./AccountChoice.jsx";
+import GetStarted from "./Pages/Get-StartedPage.jsx";
+import Home from "./Pages/Home.jsx";
+import AccountCreation from "./Pages/AccountChoice.jsx";
 import CreateAccountForm from "./Pages/CreateAccountForm.jsx";
 import Login from "./Pages/Login.jsx";
-import Subscriptions from "./Subscriptions.jsx";
-import Watchlist from "./Watchlist.jsx";
-import MoviesShows from "./MoviesShows.jsx";
+import Subscriptions from "./Pages/Subscriptions.jsx";
+import Watchlist from "./Pages/Watchlist.jsx";
+import MoviesShows from "./Pages/MoviesShows.jsx";
 
 export default function App() {
   const { pathname } = useLocation();
