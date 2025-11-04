@@ -8,6 +8,8 @@ import Login from "./Pages/Login.jsx";
 import Subscriptions from "./Pages/Subscriptions.jsx";
 import Watchlist from "./Pages/Watchlist.jsx";
 import MoviesShows from "./Pages/MoviesShows.jsx";
+import Account from "./Pages/Account.jsx";
+
 
 export default function App() {
   const { pathname } = useLocation();
@@ -29,6 +31,7 @@ export default function App() {
   <Route path="/create-account" element={<AccountCreation />} />
   <Route path="/create-account-form" element={<CreateAccountForm />} />
   <Route path="/login" element={<Login />} />
+  <Route path="/account" element={<Account />} />
 
   <Route path="/subscriptions" element={<Subscriptions />} />
   <Route path="/watchlist" element={<Watchlist />} />

@@ -17,6 +17,8 @@ export default function Navbar() {
         <NavLink to="/movies" className={item}>Movies & Shows</NavLink>
         <NavLink to="/watchlist" className={item}>Watchlist</NavLink>
         <NavLink to="/subscriptions" className={item}>Subscriptions</NavLink>
+        <NavLink to="/account" className={item}>Account</NavLink>
+
       </nav>
     </header>
   );
