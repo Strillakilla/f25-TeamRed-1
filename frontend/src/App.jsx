@@ -2,7 +2,9 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar.jsx";
 import GetStarted from "./Get-StartedPage.jsx";
 import Home from "./Home.jsx";
-import AccountCreation from "./AccountCreation.jsx";
+import AccountCreation from "./AccountChoice.jsx";
+import CreateAccountForm from "./Pages/CreateAccountForm.jsx";
+import Login from "./Pages/Login.jsx";
 import Subscriptions from "./Subscriptions.jsx";
 import Watchlist from "./Watchlist.jsx";
 import MoviesShows from "./MoviesShows.jsx";
@@ -24,10 +26,13 @@ export default function App() {
           <Route path="/home" element={<Home />} />
 
           {/* Inner pages */}
-          <Route path="/create-account" element={<AccountCreation />} />
-          <Route path="/subscriptions" element={<Subscriptions />} />
-          <Route path="/watchlist" element={<Watchlist />} />
-          <Route path="/movies" element={<MoviesShows />} />
+  <Route path="/create-account" element={<AccountCreation />} />
+  <Route path="/create-account-form" element={<CreateAccountForm />} />
+  <Route path="/login" element={<Login />} />
+
+  <Route path="/subscriptions" element={<Subscriptions />} />
+  <Route path="/watchlist" element={<Watchlist />} />
+  <Route path="/movies" element={<MoviesShows />} />
         </Routes>
       </main>
     </div>
