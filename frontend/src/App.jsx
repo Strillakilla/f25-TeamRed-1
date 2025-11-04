@@ -9,6 +9,7 @@ import Subscriptions from "./Pages/Subscriptions.jsx";
 import Watchlist from "./Pages/Watchlist.jsx";
 import MoviesShows from "./Pages/MoviesShows.jsx";
 import Account from "./Pages/Account.jsx";
+import ForgotPassword from "./Pages/ForgotPassword.jsx";
 
 
 export default function App() {
@@ -32,6 +33,8 @@ export default function App() {
   <Route path="/create-account-form" element={<CreateAccountForm />} />
   <Route path="/login" element={<Login />} />
   <Route path="/account" element={<Account />} />
+  <Route path="/forgot-password" element={<ForgotPassword />} />
+
 
   <Route path="/subscriptions" element={<Subscriptions />} />
   <Route path="/watchlist" element={<Watchlist />} />

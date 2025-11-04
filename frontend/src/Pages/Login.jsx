@@ -112,10 +112,14 @@ export default function Login() {
               <span>Remember me</span>
             </label>
 
-            {/* You can wire this later */}
-            <Link to="/create-account-form" className="text-sm underline hover:opacity-90">
-              Forgot password?
-            </Link>
+
+            <button
+                type="button"
+                onClick={() => navigate("/forgot-password")}
+                className="text-sm text-teal-300 hover:text-teal-200"
+            >
+                Forgot your password?
+            </button>
           </div>
 
           {/* Submit */}
