@@ -39,6 +39,7 @@ gradle-app.properties
 # IDEs
 # IntelliJ
 .idea/
+.idea/workspace.xml
 *.iml
 *.ipr
 *.iws
