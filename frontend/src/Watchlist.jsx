@@ -57,7 +57,7 @@ export default function Watchlist() {
               key={it.id}
               className="bg-white border rounded-lg shadow-sm p-4 flex items-center justify-between"
             >
-              <span className="font-medium">{it.title}</span>
+              <span className="font-medium text-black">{it.title}</span>
               <button
                 className="text-red-600 hover:text-red-700 text-sm"
                 onClick={() => remove(it.id)}
