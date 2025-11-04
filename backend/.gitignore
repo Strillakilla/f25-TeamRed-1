@@ -1,0 +1,51 @@
+# Java / JVM
+*.class
+*.jar
+*.war
+*.ear
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+gradle-app.setting
+gradle-app.properties
+
+# IDEs
+# IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Eclipse
+.project
+.classpath
+.settings/
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
+
+# Spring Boot temp files
+*.pid
+*.gz
+*.zip
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Local env files (store API keys locally, not in git)
+.env
+.env.*
