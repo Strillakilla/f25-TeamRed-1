@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, NavLink } from "react-router-dom";
 
 const USER_EMAIL_KEY = "bb.user.email";
 const USER_NAME_KEY  = "bb.user.name";
@@ -135,12 +135,20 @@ export default function Account() {
         </Link>
       </section>
 
-      {/* Placeholder for future settings */}
+      {/* Security card with link */}
       <section className="bg-white/5 border border-white/10 rounded-xl p-5">
-        <h3 className="font-semibold mb-2">Security</h3>
-        <p className="text-sm text-slate-300">
-          Password changes & multi-factor authentication coming soon.
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-semibold">Security</h3>
+            <p className="text-sm text-slate-300">Password changes & multi-factor authentication.</p>
+          </div>
+          <NavLink
+            to="/security"
+            className="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-sm"
+          >
+            Open
+          </NavLink>
+        </div>
       </section>
     </div>
   );

@@ -11,6 +11,7 @@ import MoviesShows from "./Pages/MoviesShows.jsx";
 import Account from "./Pages/Account.jsx";
 import ForgotPassword from "./Pages/ForgotPassword.jsx";
 import Footer from "./components/Footer.jsx";
+import Security from "./Pages/Security.jsx";
 
 export default function App() {
   const { pathname } = useLocation();
@@ -34,6 +35,7 @@ export default function App() {
           <Route path="/subscriptions" element={<Subscriptions />} />
           <Route path="/watchlist" element={<Watchlist />} />
           <Route path="/movies" element={<MoviesShows />} />
+          <Route path="/security" element={<Security />} />
         </Routes>
         </main>
       <Footer />
