@@ -12,6 +12,7 @@ import Account from "./Pages/Account.jsx";
 import ForgotPassword from "./Pages/ForgotPassword.jsx";
 import Footer from "./components/Footer.jsx";
 import Security from "./Pages/Security.jsx";
+import ChatbotWidget from "./components/ChatbotWidget.jsx";
 
 export default function App() {
   const { pathname } = useLocation();
@@ -38,6 +39,9 @@ export default function App() {
           <Route path="/security" element={<Security />} />
         </Routes>
         </main>
+             {/* Floating bot — always visible */}
+        <ChatbotWidget />
+        {pathname !== "/get-started" && <ChatbotWidget />}
       <Footer />
     </div>
   );
