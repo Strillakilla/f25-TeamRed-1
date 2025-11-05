@@ -1,4 +1,4 @@
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar.jsx";
 import GetStarted from "./Pages/Get-StartedPage.jsx";
 import Home from "./Pages/Home.jsx";
@@ -14,7 +14,7 @@ import ForgotPassword from "./Pages/ForgotPassword.jsx";
 
 export default function App() {
   const { pathname } = useLocation();
-  const showNavbar = pathname !== "/"; // hide navbar on the Get Started landing
+  const showNavbar = pathname !== "/get-started";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-[#1A093A] to-[#2D0F4E] text-slate-100">
@@ -22,12 +22,15 @@ export default function App() {
 
       <main className="max-w-6xl mx-auto px-6 py-6">
         <Routes>
-          {/* Landing page */}
-          <Route path="/" element={<GetStarted />} />
+          {/* Default -> Home */}
+          <Route path="/" element={<Navigate to="/home" replace />} />
 
-          {/* Give Home its own path (avoid duplicate "/") */}
+          {/* Home (separate from Get Started) */}
           <Route path="/home" element={<Home />} />
 
+          {/* Get Started lives on its own route */}
+          <Route path="/get-started" element={<GetStarted />} />
+          
           {/* Inner pages */}
   <Route path="/create-account" element={<AccountCreation />} />
   <Route path="/create-account-form" element={<CreateAccountForm />} />

@@ -13,6 +13,7 @@ export default function Navbar() {
         <span className="text-white">Buddy</span>
       </span>
       <nav className="flex gap-3">
+        <NavLink to="/get-started" className={item}>Get Started</NavLink>
         <NavLink to="/home" className={item}>Home</NavLink>
         <NavLink to="/movies" className={item}>Movies & Shows</NavLink>
         <NavLink to="/watchlist" className={item}>Watchlist</NavLink>
