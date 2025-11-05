@@ -25,9 +25,6 @@ export default function GetStarted() {
         Get Started
       </button>
 
-      <p className="mt-10 text-xs text-slate-300">
-        © {new Date().getFullYear()} BingeBuddy • All rights reserved
-      </p>
     </section>
   );
 }

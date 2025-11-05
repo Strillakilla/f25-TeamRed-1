@@ -10,7 +10,7 @@ import Watchlist from "./Pages/Watchlist.jsx";
 import MoviesShows from "./Pages/MoviesShows.jsx";
 import Account from "./Pages/Account.jsx";
 import ForgotPassword from "./Pages/ForgotPassword.jsx";
-
+import Footer from "./components/Footer.jsx";
 
 export default function App() {
   const { pathname } = useLocation();
@@ -22,28 +22,21 @@ export default function App() {
 
       <main className="max-w-6xl mx-auto px-6 py-6">
         <Routes>
-          {/* Default -> Home */}
+
           <Route path="/" element={<Navigate to="/home" replace />} />
-
-          {/* Home (separate from Get Started) */}
           <Route path="/home" element={<Home />} />
-
-          {/* Get Started lives on its own route */}
           <Route path="/get-started" element={<GetStarted />} />
-          
-          {/* Inner pages */}
-  <Route path="/create-account" element={<AccountCreation />} />
-  <Route path="/create-account-form" element={<CreateAccountForm />} />
-  <Route path="/login" element={<Login />} />
-  <Route path="/account" element={<Account />} />
-  <Route path="/forgot-password" element={<ForgotPassword />} />
-
-
-  <Route path="/subscriptions" element={<Subscriptions />} />
-  <Route path="/watchlist" element={<Watchlist />} />
-  <Route path="/movies" element={<MoviesShows />} />
+          <Route path="/create-account" element={<AccountCreation />} />
+          <Route path="/create-account-form" element={<CreateAccountForm />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/account" element={<Account />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/subscriptions" element={<Subscriptions />} />
+          <Route path="/watchlist" element={<Watchlist />} />
+          <Route path="/movies" element={<MoviesShows />} />
         </Routes>
-      </main>
+        </main>
+      <Footer />
     </div>
   );
 }
