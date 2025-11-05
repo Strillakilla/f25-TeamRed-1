@@ -24,7 +24,6 @@ export default function GetStarted() {
       >
         Get Started
       </button>
-
     </section>
   );
 }
