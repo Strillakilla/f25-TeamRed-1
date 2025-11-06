@@ -11,6 +11,63 @@ const TYPE_LABELS = {
   "Game Show": "Game Show",
 };
 
+// Reusable multi-select "dropdown" with checkmarks
+function MultiSelectDropdown({ placeholder, options, selected, onChange }) {
+  const [open, setOpen] = useState(false);
+
+  function toggleOption(value) {
+    if (selected.includes(value)) {
+      onChange(selected.filter((v) => v !== value));
+    } else {
+      onChange([...selected, value]);
+    }
+  }
+
+  const label =
+    selected.length === 0
+      ? placeholder
+      : selected.length === 1
+      ? options.find((o) => o.value === selected[0])?.label ?? selected[0]
+      : `${selected.length} selected`;
+
+  return (
+    <div className="relative text-xs">
+      <button
+        type="button"
+        className="flex items-center justify-between gap-2 min-w-[150px] bg-slate-900/80 border border-slate-600 rounded-md px-3 py-2 text-slate-100 hover:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
+        onClick={() => setOpen((prev) => !prev)}
+      >
+        <span className="truncate">{label}</span>
+        <span className="text-[10px] text-slate-400">▼</span>
+      </button>
+
+      {open && (
+        <div className="absolute z-20 mt-1 w-full max-h-52 overflow-auto bg-slate-950/95 border border-slate-700 rounded-md shadow-lg">
+          {options.length === 0 && (
+            <div className="px-3 py-2 text-[11px] text-slate-400">
+              No options
+            </div>
+          )}
+          {options.map((opt) => (
+            <label
+              key={opt.value}
+              className="flex items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-slate-800/80 text-[11px] text-slate-100"
+            >
+              <input
+                type="checkbox"
+                className="accent-teal-400"
+                checked={selected.includes(opt.value)}
+                onChange={() => toggleOption(opt.value)}
+              />
+              <span className="truncate">{opt.label}</span>
+            </label>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function MoviesShows() {
   const [q, setQ] = useState("");
   const [results, setResults] = useState([]);
@@ -18,14 +75,10 @@ export default function MoviesShows() {
   const [msg, setMsg] = useState("");
   const PAGE_SIZE = 24;                // how many shows per "page"
   const [itemsToShow, setItemsToShow] = useState(PAGE_SIZE);
+  const [filterMode, setFilterMode] = useState("quick");
 
    // NEW: front-end filter state
   // ---- FILTER + SORT STATE (front end only) ----
-  const [typeFilter, setTypeFilter] = useState("all");
-  const [genreFilter, setGenreFilter] = useState("all");
-  const [languageFilter, setLanguageFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [serviceFilter, setServiceFilter] = useState("all");
   const [minYear, setMinYear] = useState("");
   const [maxYear, setMaxYear] = useState("");
   const [minRating, setMinRating] = useState("");
@@ -33,6 +86,21 @@ export default function MoviesShows() {
   const [maxRuntime, setMaxRuntime] = useState("");
   const [sortBy, setSortBy] = useState("relevance");
 
+  // NEW: inclusion/exclusion modes (plural names)
+const [includeTypes, setIncludeTypes] = useState([]);
+const [excludeTypes, setExcludeTypes] = useState([]);
+
+const [includeGenres, setIncludeGenres] = useState([]);
+const [excludeGenres, setExcludeGenres] = useState([]);
+
+const [includeLanguages, setIncludeLanguages] = useState([]);
+const [excludeLanguages, setExcludeLanguages] = useState([]);
+
+const [includeStatuses, setIncludeStatuses] = useState([]);
+const [excludeStatuses, setExcludeStatuses] = useState([]);
+
+const [includeServices, setIncludeServices] = useState([]);
+const [excludeServices, setExcludeServices] = useState([]);
 
   // Debounce search
  useEffect(() => {
@@ -49,12 +117,17 @@ useEffect(() => {
   setItemsToShow(PAGE_SIZE);
 }, [
   q,
-  results,
-  typeFilter,
-  genreFilter,
-  languageFilter,
-  statusFilter,
-  serviceFilter,
+   results,
+  includeTypes,
+  excludeTypes,
+  includeGenres,
+  excludeGenres,
+  includeServices,
+  excludeServices,
+  includeLanguages,
+  excludeLanguages,
+  includeStatuses,
+  excludeStatuses,
   minYear,
   maxYear,
   minRating,
@@ -158,22 +231,88 @@ async function loadDefaultShows() {
     toast("Added to watchlist");
   }
 
-   // NEW: apply filter on the front end only
-   const filteredResults = results.filter(r => {
-  if (typeFilter !== "all" && r.type !== typeFilter) return false;
-  if (genreFilter !== "all" && !r.genres.includes(genreFilter)) return false;
+   // Filer results
+   const filteredResults = results.filter((r) => {
+  // ---------- TYPE ----------
+  if (includeTypes.length > 0 && !includeTypes.includes(r.type)) {
+    return false; // must match at least one included type
+  }
+  if (excludeTypes.length > 0 && excludeTypes.includes(r.type)) {
+    return false; // hidden if in excluded types
+  }
 
-  if (languageFilter !== "all" && r.language !== languageFilter) return false;
-  if (statusFilter !== "all" && r.status !== statusFilter) return false;
-  if (serviceFilter !== "all" && r.service !== serviceFilter) return false;
+  // ---------- GENRES ----------
+  // includeGenres: show only if it has at least one included genre
+  if (
+    includeGenres.length > 0 &&
+    !includeGenres.some((g) => r.genres.includes(g))
+  ) {
+    return false;
+  }
+  // excludeGenres: hide if it has any excluded genres
+  if (
+    excludeGenres.length > 0 &&
+    excludeGenres.some((g) => r.genres.includes(g))
+  ) {
+    return false;
+  }
 
+  // ---------- SERVICE ----------
+  if (
+    includeServices.length > 0 &&
+    !includeServices.includes(r.service)
+  ) {
+    return false;
+  }
+  if (
+    excludeServices.length > 0 &&
+    excludeServices.includes(r.service)
+  ) {
+    return false;
+  }
+
+  // ---------- LANGUAGE ----------
+  if (
+    includeLanguages.length > 0 &&
+    !includeLanguages.includes(r.language)
+  ) {
+    return false;
+  }
+  if (
+    excludeLanguages.length > 0 &&
+    excludeLanguages.includes(r.language)
+  ) {
+    return false;
+  }
+
+  // ---------- STATUS ----------
+  if (
+    includeStatuses.length > 0 &&
+    !includeStatuses.includes(r.status)
+  ) {
+    return false;
+  }
+  if (
+    excludeStatuses.length > 0 &&
+    excludeStatuses.includes(r.status)
+  ) {
+    return false;
+  }
+
+  // ---------- NUMERIC FILTERS ----------
   if (minYear && r.year && Number(r.year) < Number(minYear)) return false;
   if (maxYear && r.year && Number(r.year) > Number(maxYear)) return false;
 
-  if (minRating && r.rating != null && r.rating < Number(minRating)) return false;
+  if (minRating && r.rating != null && r.rating < Number(minRating)) {
+    return false;
+  }
 
-  if (minRuntime && r.runtime != null && r.runtime < Number(minRuntime)) return false;
-  if (maxRuntime && r.runtime != null && r.runtime > Number(maxRuntime)) return false;
+  if (minRuntime && r.runtime != null && r.runtime < Number(minRuntime)) {
+    return false;
+  }
+  if (maxRuntime && r.runtime != null && r.runtime > Number(maxRuntime)) {
+    return false;
+  }
 
   return true;
 });
@@ -206,6 +345,42 @@ const serviceOptions = Array.from(
   new Set(results.map(r => r.service).filter(Boolean))
 ).sort();
 
+// derive single-value summaries for the quick bar
+const quickTypeValue =
+  includeTypes.length === 0 && excludeTypes.length === 0
+    ? "all"
+    : includeTypes.length === 1 && excludeTypes.length === 0
+    ? includeTypes[0]
+    : "custom";
+
+const quickGenreValue =
+  includeGenres.length === 0 && excludeGenres.length === 0
+    ? "all"
+    : includeGenres.length === 1 && excludeGenres.length === 0
+    ? includeGenres[0]
+    : "custom";
+
+const quickServiceValue =
+  includeServices.length === 0 && excludeServices.length === 0
+    ? "all"
+    : includeServices.length === 1 && excludeServices.length === 0
+    ? includeServices[0]
+    : "custom";
+
+const quickLanguageValue =
+  includeLanguages.length === 0 && excludeLanguages.length === 0
+    ? "all"
+    : includeLanguages.length === 1 && excludeLanguages.length === 0
+    ? includeLanguages[0]
+    : "custom";
+
+const quickStatusValue =
+  includeStatuses.length === 0 && excludeStatuses.length === 0
+    ? "all"
+    : includeStatuses.length === 1 && excludeStatuses.length === 0
+    ? includeStatuses[0]
+    : "custom";
+    
   return (
     <div className="space-y-6">
       <header className="flex items-center justify-between gap-3">
@@ -235,188 +410,581 @@ const serviceOptions = Array.from(
         )}
       </div>
 
-  {/* NEW: Filters (front end only) */}
-  <div className="flex flex-wrap gap-3 mt-1 text-sm items-end">
-    {/* Type filter */}
-    <label className="flex items-center gap-2 text-slate-200">
-      <span>Type:</span>
-      <select
-        className="bg-white/10 text-white border border-white/20 rounded-md px-2 py-1"
-        value={typeFilter}
-        onChange={(e) => setTypeFilter(e.target.value)}
-      >
-        <option value="all">All</option>
-        {/* dynamic options */}
-        {typeOptions.map(t => (
-          <option key={t} value={t}>
-            {TYPE_LABELS[t] || t}
-            </option>
-        ))}
-      </select>
-    </label>
-
-    {/* Genre filter */}
-    <label className="flex items-center gap-2 text-slate-200">
-    <span>Genre:</span>
-    <select
-      className="bg-white/10 text-white border border-white/20 rounded-md px-2 py-1"
-      value={genreFilter}
-      onChange={(e) => setGenreFilter(e.target.value)}
-    >
-    <option value="all">All</option>
-  {genreOptions.map(g => (
-  <option key={g} value={g}>{g}</option>
-))}
-  </select>
-</label>
-
-    {/* Year range */}
-    <div className="flex items-center gap-2 text-slate-200">
-      <span>Year:</span>
-      <input
-        type="number"
-        placeholder="From"
-        className="w-20 bg-white/10 text-white border border-white/20 rounded-md px-2 py-1"
-        value={minYear}
-        onChange={(e) => setMinYear(e.target.value)}
-      />
-      <span>–</span>
-      <input
-        type="number"
-        placeholder="To"
-        className="w-20 bg-white/10 text-white border border-white/20 rounded-md px-2 py-1"
-        value={maxYear}
-        onChange={(e) => setMaxYear(e.target.value)}
-      />
-    </div>
-
-    {/* Min rating */}
-    <div className="flex items-center gap-2 text-slate-200">
-      <span>Min rating:</span>
-      <input
-        type="number"
-        min="0"
-        max="10"
-        step="0.5"
-        className="w-16 bg-white/10 text-white border border-white/20 rounded-md px-2 py-1"
-        value={minRating}
-        onChange={(e) => setMinRating(e.target.value)}
-      />
-    </div>
-
-    {/* Runtime range */}
-    <div className="flex items-center gap-2 text-slate-200">
-    <span>Runtime (min):</span>
-    <input
-    type="number"
-    placeholder="From"
-    className="w-20 bg-white/10 text-white border border-white/20 rounded-md px-2 py-1"
-    value={minRuntime}
-    onChange={(e) => setMinRuntime(e.target.value)}
-    />
-  <span>–</span>
-  <input
-  type="number"
-  placeholder="To"
-  className="w-20 bg-white/10 text-white border border-white/20 rounded-md px-2 py-1"
-  value={maxRuntime}
-  onChange={(e) => setMaxRuntime(e.target.value)}
-/>
-</div>
-
-{/* Language */}
-<label className="flex items-center gap-2 text-slate-200">
-<span>Language:</span>
-<select
-className="bg-white/10 text-white border border-white/20 rounded-md px-2 py-1"
-value={languageFilter}
-onChange={(e) => setLanguageFilter(e.target.value)}
->
-<option value="all">All</option>
-{languageOptions.map(l => (
-  <option key={l} value={l}>{l}</option>
-))}
-</select>
-</label>
-
-{/* Status */}
-<label className="flex items-center gap-2 text-slate-200">
-  <span>Status:</span>
-  <select
-    className="bg-white/10 text-white border border-white/20 rounded-md px-2 py-1"
-    value={statusFilter}
-    onChange={(e) => setStatusFilter(e.target.value)}
-  >
-    <option value="all">All</option>
-    {statusOptions.map(s => (
-      <option key={s} value={s}>{s}</option>
-    ))}
-  </select>
-</label>
-
-{/* Streaming service */}
-<label className="flex items-center gap-2 text-slate-200">
-  <span>Service:</span>
-  <select
-    className="bg-white/10 text-white border border-white/20 rounded-md px-2 py-1"
-    value={serviceFilter}
-    onChange={(e) => setServiceFilter(e.target.value)}
-  >
-    <option value="all">All</option>
-    {serviceOptions.map(s => (
-      <option key={s} value={s}>{s}</option>
-    ))}
-  </select>
-</label>
-
-  {/* Sort by */}
-  <label className="flex items-center gap-2 text-slate-200">
-        <span>Sort by:</span>
-        <select
-          className="bg-white/10 text-white border border-white/20 rounded-md px-2 py-1"
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value)}
+{/* Filters panel */}
+<div className="mt-4 space-y-4 text-sm">
+  {/* Header row with Quick/Advanced toggle */}
+  <div className="flex items-center justify-between gap-3">
+    <div className="flex items-center gap-3">
+      <h2 className="text-sm font-semibold text-slate-100">
+      Filter results
+    </h2>
+     {/* Quick / Advanced switch */}
+      <div className="flex items-center text-[11px] bg-slate-900/60 rounded-full border border-white/10 overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setFilterMode("quick")}
+          className={`px-3 py-1 ${
+            filterMode === "quick"
+              ? "bg-teal-400 text-slate-900"
+              : "bg-transparent text-slate-300"
+          }`}
         >
-          <option value="relevance">Relevance</option>
-          <option value="rating">Rating</option>
-          <option value="year">Year</option>
+          Quick
+        </button>
+        <button
+          type="button"
+          onClick={() => setFilterMode("advanced")}
+          className={`px-3 py-1 ${
+            filterMode === "advanced"
+              ? "bg-teal-400 text-slate-900"
+              : "bg-transparent text-slate-300"
+          }`}
+        >
+          Advanced
+        </button>
+      </div>
+    </div>
+    {/* Clear all*/}
+    {(includeTypes.length ||
+      excludeTypes.length ||
+      includeGenres.length ||
+      excludeGenres.length ||
+      includeServices.length ||
+      excludeServices.length ||
+      includeLanguages.length ||
+      excludeLanguages.length ||
+      includeStatuses.length ||
+      excludeStatuses.length ||
+      minYear ||
+      maxYear ||
+      minRating ||
+      minRuntime ||
+      maxRuntime ||
+      sortBy !== "relevance") && (
+      <button
+        className="px-3 py-1.5 rounded-md border border-white/20 text-xs text-slate-100 hover:bg-white/10"
+        onClick={() => {
+          setIncludeTypes([]);
+          setExcludeTypes([]);
+          setIncludeGenres([]);
+          setExcludeGenres([]);
+          setIncludeServices([]);
+          setExcludeServices([]);
+          setIncludeLanguages([]);
+          setExcludeLanguages([]);
+          setIncludeStatuses([]);
+          setExcludeStatuses([]);
+
+          setMinYear("");
+          setMaxYear("");
+          setMinRating("");
+          setMinRuntime("");
+          setMaxRuntime("");
+          setSortBy("relevance");
+        }}
+      >
+        Clear all filters
+      </button>
+    )}
+  </div>
+  {/* QUICK MODE */}
+  {filterMode === "quick" && (
+    <div className="flex flex-wrap gap-3 items-end text-xs md:text-sm">
+
+      {/* Type */}
+      <label className="flex flex-col gap-1 text-slate-200">
+        <span>Type</span>
+        <select
+          className="min-w-[150px] bg-slate-900/80 border border-slate-600 rounded-md px-3 py-2 text-slate-100"
+          value={quickTypeValue}
+          onChange={(e) => {
+            const val = e.target.value;
+            if (val === "all") {
+              setIncludeTypes([]);
+              setExcludeTypes([]);
+            } else if (val === "custom") {
+              // do nothing; advanced already has a custom combo
+            } else {
+              setIncludeTypes([val]);
+              setExcludeTypes([]);
+            }
+          }}
+        >
+          <option value="all">All types</option>
+          {typeOptions.map((t) => (
+            <option key={t} value={t}>
+              {TYPE_LABELS[t] || t}
+            </option>
+          ))}
+          {quickTypeValue === "custom" && (
+            <option value="custom">(custom)</option>
+          )}
         </select>
       </label>
 
-  {/* Clear all filters */}
-  {(typeFilter !== "all" ||
-    genreFilter !== "all" ||
-    minYear ||
-    maxYear ||
-    minRating ||
-    typeFilter ||
-    languageFilter ||
-    statusFilter ||
-    serviceFilter ||
-    minRuntime ||
-    maxRuntime ||
-    sortBy !== "relevance") && (
-    <button
-      className="ml-auto px-3 py-2 rounded-md border border-white/20 text-xs text-slate-100 hover:bg-white/10"
-      onClick={() => {
-        setTypeFilter("all");
-        setGenreFilter("all");
-        setLanguageFilter("all");
-        setStatusFilter("all");
-        setServiceFilter("all");
-        setMinYear("");
-        setMaxYear("");
-        setMinRating("");
-        setMinRuntime("");
-        setMaxRuntime("");
-        setSortBy("relevance");
-}}
-    >
-      Clear All
-    </button>
+      {/* Genre */}
+      <label className="flex flex-col gap-1 text-slate-200">
+        <span>Genre</span>
+        <select
+          className="min-w-[150px] bg-slate-900/80 border border-slate-600 rounded-md px-3 py-2 text-slate-100"
+          value={quickGenreValue}
+          onChange={(e) => {
+            const val = e.target.value;
+            if (val === "all") {
+              setIncludeGenres([]);
+              setExcludeGenres([]);
+            } else if (val === "custom") {
+              // keep advanced custom
+            } else {
+              setIncludeGenres([val]);
+              setExcludeGenres([]);
+            }
+          }}
+        >
+          <option value="all">All genres</option>
+          {genreOptions.map((g) => (
+            <option key={g} value={g}>
+              {g}
+            </option>
+          ))}
+          {quickGenreValue === "custom" && (
+            <option value="custom">(custom)</option>
+          )}
+        </select>
+      </label>
+
+      {/* Service */}
+      <label className="flex flex-col gap-1 text-slate-200">
+        <span>Service</span>
+        <select
+          className="min-w-[150px] bg-slate-900/80 border border-slate-600 rounded-md px-3 py-2 text-slate-100"
+          value={quickServiceValue}
+          onChange={(e) => {
+            const val = e.target.value;
+            if (val === "all") {
+              setIncludeServices([]);
+              setExcludeServices([]);
+            } else if (val === "custom") {
+              // keep advanced custom
+            } else {
+              setIncludeServices([val]);
+              setExcludeServices([]);
+            }
+          }}
+        >
+          <option value="all">All services</option>
+          {serviceOptions.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+          {quickServiceValue === "custom" && (
+            <option value="custom">(custom)</option>
+          )}
+        </select>
+      </label>
+
+      {/* Language */}
+      <label className="flex flex-col gap-1 text-slate-200">
+        <span>Language</span>
+        <select
+          className="min-w-[130px] bg-slate-900/80 border border-slate-600 rounded-md px-3 py-2 text-slate-100"
+          value={quickLanguageValue}
+          onChange={(e) => {
+            const val = e.target.value;
+            if (val === "all") {
+              setIncludeLanguages([]);
+              setExcludeLanguages([]);
+            } else if (val === "custom") {
+              // keep advanced custom
+            } else {
+              setIncludeLanguages([val]);
+              setExcludeLanguages([]);
+            }
+          }}
+        >
+          <option value="all">All languages</option>
+          {languageOptions.map((l) => (
+            <option key={l} value={l}>
+              {l}
+            </option>
+          ))}
+          {quickLanguageValue === "custom" && (
+            <option value="custom">(custom)</option>
+          )}
+        </select>
+      </label>
+
+      {/* Status */}
+      <label className="flex flex-col gap-1 text-slate-200">
+        <span>Status</span>
+        <select
+          className="min-w-[130px] bg-slate-900/80 border border-slate-600 rounded-md px-3 py-2 text-slate-100"
+          value={quickStatusValue}
+          onChange={(e) => {
+            const val = e.target.value;
+            if (val === "all") {
+              setIncludeStatuses([]);
+              setExcludeStatuses([]);
+            } else if (val === "custom") {
+              // keep advanced custom
+            } else {
+              setIncludeStatuses([val]);
+              setExcludeStatuses([]);
+            }
+          }}
+        >
+          <option value="all">All statuses</option>
+          {statusOptions.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+          {quickStatusValue === "custom" && (
+            <option value="custom">(custom)</option>
+          )}
+        </select>
+      </label>
+
+      {/* Year, rating, runtime, sort – you can reuse your existing small inputs here */}
+      <div className="flex flex-wrap gap-3 items-end">
+        <div className="flex items-center gap-2 text-slate-200">
+          <span>Year:</span>
+          <input
+            type="number"
+            placeholder="From"
+            className="w-20 bg-slate-900/80 text-white border border-slate-600 rounded-md px-2 py-1"
+            value={minYear}
+            onChange={(e) => setMinYear(e.target.value)}
+          />
+          <span>–</span>
+          <input
+            type="number"
+            placeholder="To"
+            className="w-20 bg-slate-900/80 text-white border border-slate-600 rounded-md px-2 py-1"
+            value={maxYear}
+            onChange={(e) => setMaxYear(e.target.value)}
+          />
+        </div>
+
+        <div className="flex items-center gap-2 text-slate-200">
+          <span>Min rating:</span>
+          <input
+            type="number"
+            min="0"
+            max="10"
+            step="0.5"
+            className="w-16 bg-slate-900/80 text-white border border-slate-600 rounded-md px-2 py-1"
+            value={minRating}
+            onChange={(e) => setMinRating(e.target.value)}
+          />
+        </div>
+
+        <div className="flex items-center gap-2 text-slate-200">
+          <span>Sort by:</span>
+          <select
+            className="bg-slate-900/80 text-white border border-slate-600 rounded-md px-2 py-1"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+          >
+            <option value="relevance">Relevance</option>
+            <option value="rating">Rating</option>
+            <option value="year">Year</option>
+          </select>
+        </div>
+      </div>
+    </div>
   )}
+
+{/* ADVANCED MODE */}
+{filterMode === "advanced" && (
+   <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-3">
+  {/* Grid of filter cards */}
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    {/* TYPE */}
+<div className="bg-slate-900/40 rounded-lg border border-white/10 p-3 space-y-2">
+  <div className="flex items-center justify-between">
+    <span className="text-xs font-semibold text-slate-100">Type</span>
+    {(includeTypes.length || excludeTypes.length) && (
+      <span className="text-[10px] text-teal-300">
+        {includeTypes.length ? `+${includeTypes.length}` : ""}
+        {includeTypes.length && excludeTypes.length ? " · " : ""}
+        {excludeTypes.length ? `-${excludeTypes.length}` : ""}
+      </span>
+    )}
+  </div>
+  <div className="flex flex-col gap-2">
+    <div className="flex items-center gap-2">
+      <span className="text-[10px] uppercase text-slate-400 w-14">
+        Include
+      </span>
+      <MultiSelectDropdown
+        placeholder="All types"
+        options={typeOptions.map((t) => ({
+          value: t,
+          label: TYPE_LABELS[t] || t,
+        }))}
+        selected={includeTypes}
+        onChange={setIncludeTypes}
+      />
+    </div>
+    <div className="flex items-center gap-2">
+      <span className="text-[10px] uppercase text-slate-400 w-14">
+        Exclude
+      </span>
+      <MultiSelectDropdown
+        placeholder="None excluded"
+        options={typeOptions.map((t) => ({
+          value: t,
+          label: TYPE_LABELS[t] || t,
+        }))}
+        selected={excludeTypes}
+        onChange={setExcludeTypes}
+      />
+    </div>
+  </div>
 </div>
 
+    {/* GENRES */}
+<div className="bg-slate-900/40 rounded-lg border border-white/10 p-3 space-y-2">
+  <div className="flex items-center justify-between">
+    <span className="text-xs font-semibold text-slate-100">Genres</span>
+    {(includeGenres.length || excludeGenres.length) && (
+      <span className="text-[10px] text-teal-300">
+        {includeGenres.length ? `+${includeGenres.length}` : ""}
+        {includeGenres.length && excludeGenres.length ? " · " : ""}
+        {excludeGenres.length ? `-${excludeGenres.length}` : ""}
+      </span>
+    )}
+  </div>
+  <div className="flex flex-col gap-2">
+    <div className="flex items-center gap-2">
+      <span className="text-[10px] uppercase text-slate-400 w-14">
+        Include
+      </span>
+      <MultiSelectDropdown
+        placeholder="All genres"
+        options={genreOptions.map((g) => ({ value: g, label: g }))}
+        selected={includeGenres}
+        onChange={setIncludeGenres}
+      />
+    </div>
+    <div className="flex items-center gap-2">
+      <span className="text-[10px] uppercase text-slate-400 w-14">
+        Exclude
+      </span>
+      <MultiSelectDropdown
+        placeholder="None excluded"
+        options={genreOptions.map((g) => ({ value: g, label: g }))}
+        selected={excludeGenres}
+        onChange={setExcludeGenres}
+      />
+    </div>
+  </div>
+</div>
+
+   {/* SERVICE */}
+<div className="bg-slate-900/40 rounded-lg border border-white/10 p-3 space-y-2">
+  <div className="flex items-center justify-between">
+    <span className="text-xs font-semibold text-slate-100">Service</span>
+    {(includeServices.length || excludeServices.length) && (
+      <span className="text-[10px] text-teal-300">
+        {includeServices.length ? `+${includeServices.length}` : ""}
+        {includeServices.length && excludeServices.length ? " · " : ""}
+        {excludeServices.length ? `-${excludeServices.length}` : ""}
+      </span>
+    )}
+  </div>
+  <div className="flex flex-col gap-2">
+    <div className="flex items-center gap-2">
+      <span className="text-[10px] uppercase text-slate-400 w-14">
+        Include
+      </span>
+      <MultiSelectDropdown
+        placeholder="All services"
+        options={serviceOptions.map((s) => ({ value: s, label: s }))}
+        selected={includeServices}
+        onChange={setIncludeServices}
+      />
+    </div>
+    <div className="flex items-center gap-2">
+      <span className="text-[10px] uppercase text-slate-400 w-14">
+        Exclude
+      </span>
+      <MultiSelectDropdown
+        placeholder="None excluded"
+        options={serviceOptions.map((s) => ({ value: s, label: s }))}
+        selected={excludeServices}
+        onChange={setExcludeServices}
+      />
+    </div>
+  </div>
+</div>
+
+    {/* LANGUAGE */}
+<div className="bg-slate-900/40 rounded-lg border border-white/10 p-3 space-y-2">
+  <div className="flex items-center justify-between">
+    <span className="text-xs font-semibold text-slate-100">Language</span>
+    {(includeLanguages.length || excludeLanguages.length) && (
+      <span className="text-[10px] text-teal-300">
+        {includeLanguages.length ? `+${includeLanguages.length}` : ""}
+        {includeLanguages.length && excludeLanguages.length ? " · " : ""}
+        {excludeLanguages.length ? `-${excludeLanguages.length}` : ""}
+      </span>
+    )}
+  </div>
+  <div className="flex flex-col gap-2">
+    <div className="flex items-center gap-2">
+      <span className="text-[10px] uppercase text-slate-400 w-14">
+        Include
+      </span>
+      <MultiSelectDropdown
+        placeholder="All languages"
+        options={languageOptions.map((l) => ({ value: l, label: l }))}
+        selected={includeLanguages}
+        onChange={setIncludeLanguages}
+      />
+    </div>
+    <div className="flex items-center gap-2">
+      <span className="text-[10px] uppercase text-slate-400 w-14">
+        Exclude
+      </span>
+      <MultiSelectDropdown
+        placeholder="None excluded"
+        options={languageOptions.map((l) => ({ value: l, label: l }))}
+        selected={excludeLanguages}
+        onChange={setExcludeLanguages}
+      />
+    </div>
+  </div>
+</div>
+
+    {/* STATUS */}
+<div className="bg-slate-900/40 rounded-lg border border-white/10 p-3 space-y-2">
+  <div className="flex items-center justify-between">
+    <span className="text-xs font-semibold text-slate-100">Status</span>
+    {(includeStatuses.length || excludeStatuses.length) && (
+      <span className="text-[10px] text-teal-300">
+        {includeStatuses.length ? `+${includeStatuses.length}` : ""}
+        {includeStatuses.length && excludeStatuses.length ? " · " : ""}
+        {excludeStatuses.length ? `-${excludeStatuses.length}` : ""}
+      </span>
+    )}
+  </div>
+  <div className="flex flex-col gap-2">
+    <div className="flex items-center gap-2">
+      <span className="text-[10px] uppercase text-slate-400 w-14">
+        Include
+      </span>
+      <MultiSelectDropdown
+        placeholder="All statuses"
+        options={statusOptions.map((s) => ({ value: s, label: s }))}
+        selected={includeStatuses}
+        onChange={setIncludeStatuses}
+      />
+    </div>
+    <div className="flex items-center gap-2">
+      <span className="text-[10px] uppercase text-slate-400 w-14">
+        Exclude
+      </span>
+      <MultiSelectDropdown
+        placeholder="None excluded"
+        options={statusOptions.map((s) => ({ value: s, label: s }))}
+        selected={excludeStatuses}
+        onChange={setExcludeStatuses}
+      />
+    </div>
+  </div>
+</div>
+    {/* YEAR / RATING / RUNTIME / SORT */}
+    <div className="bg-slate-900/40 rounded-lg border border-white/10 p-3 space-y-3">
+      <span className="text-xs font-semibold text-slate-100">
+        Other filters
+      </span>
+
+      <div className="space-y-2 text-xs text-slate-200">
+        {/* Year */}
+        <div className="flex items-center gap-2">
+          <span>Year:</span>
+          <input
+            type="number"
+            placeholder="From"
+            className="w-20 bg-slate-900/80 text-white border border-slate-600 rounded-md px-2 py-1"
+            value={minYear}
+            onChange={(e) => setMinYear(e.target.value)}
+          />
+          <span>–</span>
+          <input
+            type="number"
+            placeholder="To"
+            className="w-20 bg-slate-900/80 text-white border border-slate-600 rounded-md px-2 py-1"
+            value={maxYear}
+            onChange={(e) => setMaxYear(e.target.value)}
+          />
+        </div>
+
+        {/* Rating */}
+        <div className="flex items-center gap-2">
+          <span>Min rating:</span>
+          <input
+            type="number"
+            min="0"
+            max="10"
+            step="0.5"
+            className="w-16 bg-slate-900/80 text-white border border-slate-600 rounded-md px-2 py-1"
+            value={minRating}
+            onChange={(e) => setMinRating(e.target.value)}
+          />
+        </div>
+
+        {/* Runtime */}
+        <div className="flex items-center gap-2">
+          <span>Runtime (min):</span>
+          <input
+            type="number"
+            placeholder="From"
+            className="w-20 bg-slate-900/80 text-white border border-slate-600 rounded-md px-2 py-1"
+            value={minRuntime}
+            onChange={(e) => setMinRuntime(e.target.value)}
+          />
+          <span>–</span>
+          <input
+            type="number"
+            placeholder="To"
+            className="w-20 bg-slate-900/80 text-white border border-slate-600 rounded-md px-2 py-1"
+            value={maxRuntime}
+            onChange={(e) => setMaxRuntime(e.target.value)}
+          />
+        </div>
+
+        {/* Sort by */}
+        <div className="flex items-center gap-2">
+          <span>Sort by:</span>
+          <select
+            className="bg-slate-900/80 text-white border border-slate-600 rounded-md px-2 py-1"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+          >
+            <option value="relevance">Relevance</option>
+            <option value="rating">Rating</option>
+            <option value="year">Year</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    {/* multi-select tip */}
+      <p className="text-[11px] text-slate-400 mt-2">
+        Tip: hold{" "}
+        <kbd className="px-1 rounded bg-slate-800 border border-slate-600">Ctrl</kbd> (Windows)
+        or{" "}
+        <kbd className="px-1 rounded bg-slate-800 border border-slate-600">Cmd</kbd> (Mac)
+        to select multiple values in each list.
+      </p>
+    </div>
+  )}
+</div>
     {busy && <p className="text-sm text-slate-300">Searching…</p>}
 
   {/* Results grid */}
