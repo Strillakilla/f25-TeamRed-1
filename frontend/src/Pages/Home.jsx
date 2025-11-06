@@ -65,7 +65,7 @@ export default function Home() {
       <header className="text-center">
         <h1 className="text-4xl font-extrabold">
           <span className="text-teal-300">Binge</span>
-          <span className="text-fuchsia-300">Buddy</span>
+          <span className="text-white-300">Buddy</span>
         </h1>
         <p className="text-slate-200 mt-2">Your personal streaming dashboard</p>
       </header>

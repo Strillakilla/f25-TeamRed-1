@@ -1,4 +1,5 @@
 import { NavLink } from "react-router-dom";
+import logo from "../assets/bingebuddy.png";
 
 const item = ({ isActive }) =>
   `px-3 py-2 rounded-md text-sm font-medium ${
@@ -8,10 +9,17 @@ const item = ({ isActive }) =>
 export default function Navbar() {
   return (
     <header className="w-full max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-      <span className="text-xl font-bold">
-        <span className="text-teal-300">Binge</span>
-        <span className="text-white">Buddy</span>
-      </span>
+      <div className="flex items-center gap-2">
+        <img
+          src={logo}
+          alt="BingeBuddy logo"
+          className="h-10 w-auto"
+      />
+  <span className="text-xl font-bold">
+    <span className="text-teal-300">Binge</span>
+    <span className="text-white">Buddy</span>
+    </span>
+    </div>
       <nav className="flex gap-3">
         <NavLink to="/get-started" className={item}>Get Started</NavLink>
         <NavLink to="/home" className={item}>Home</NavLink>
