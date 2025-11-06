@@ -13,7 +13,7 @@ export default function Navbar() {
         <img
           src={logo}
           alt="BingeBuddy logo"
-          className="h-10 w-auto"
+          className="h-10 w-auto rounded-lg"
       />
   <span className="text-xl font-bold">
     <span className="text-teal-300">Binge</span>
