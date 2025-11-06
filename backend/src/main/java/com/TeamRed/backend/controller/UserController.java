@@ -21,6 +21,7 @@ public class UserController {
 
     // Create user
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<User> createUser(@RequestBody User user) {
         User newUser = userService.createUser(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(newUser);
@@ -36,14 +37,14 @@ public class UserController {
     // Get user by ID
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(@PathVariable Long id) {
-        User user = userService.getUserById(id).get();
+        User user = userService.getUserById(id);
         return ResponseEntity.ok(user);
     }
 
     // Get user by email
-    @GetMapping("/email/{email}")
-    public ResponseEntity<User> getUserByEmail(@PathVariable String email) {
-        User user = userService.getUserByEmail(email).get();
+    @GetMapping("/by-email")
+    public ResponseEntity<User> getUserByEmail(@RequestParam String email) {
+        User user = userService.getUserByEmail(email);
         return ResponseEntity.ok(user);
     }
 
@@ -56,6 +57,7 @@ public class UserController {
 
     // Delete user
     @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
