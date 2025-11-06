@@ -1,1 +1,13 @@
 @import "tailwindcss";
+
+/* --- Fix standard <select> dropdown colors --- */
+select {
+  color: #f9fafb; /* light text for closed dropdown (like white) */
+  background-color: rgba(255, 255, 255, 0.08); /* subtle dark bg */
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+option {
+  color: #111827;       /* dark text for the open list */
+  background-color: #f9fafb; /* light background for options */
+}
