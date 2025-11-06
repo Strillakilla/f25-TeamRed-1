@@ -21,7 +21,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-[#1A093A] to-[#2D0F4E] text-slate-100">
       {showNavbar && <Navbar />}
-
+  
       <main className="max-w-6xl mx-auto px-6 py-6">
         <Routes>
 
