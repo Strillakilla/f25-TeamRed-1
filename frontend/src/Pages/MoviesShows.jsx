@@ -16,6 +16,8 @@ export default function MoviesShows() {
   const [results, setResults] = useState([]);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
+  const PAGE_SIZE = 24;                // how many shows per "page"
+  const [itemsToShow, setItemsToShow] = useState(PAGE_SIZE);
 
    // NEW: front-end filter state
   // ---- FILTER + SORT STATE (front end only) ----
@@ -33,11 +35,63 @@ export default function MoviesShows() {
 
 
   // Debounce search
-  useEffect(() => {
+ useEffect(() => {
+  if (q.trim()) {
     const id = setTimeout(() => search(q), 300);
     return () => clearTimeout(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q]);
+  } else {
+    // If no query, load default set
+    loadDefaultShows();
+  }
+}, [q]);
+
+useEffect(() => {
+  setItemsToShow(PAGE_SIZE);
+}, [
+  q,
+  results,
+  typeFilter,
+  genreFilter,
+  languageFilter,
+  statusFilter,
+  serviceFilter,
+  minYear,
+  maxYear,
+  minRating,
+  minRuntime,
+  maxRuntime,
+  sortBy,
+]);
+
+async function loadDefaultShows() {
+  setBusy(true);
+  try {
+    const res = await fetch("https://api.tvmaze.com/shows?page=0");
+    const data = await res.json();
+
+    const normalized = (data || []).map(show => ({
+      id: show.id,
+      title: show.name,
+      poster: show.image?.medium || show.image?.original || "",
+      year: show.premiered?.slice(0, 4) || "",
+      type: show.type || "Show",
+      typeLabel: TYPE_LABELS[show.type] || show.type,
+      genres: show.genres || [],
+      rating: show.rating?.average ?? null,
+      runtime: show.runtime ?? show.averageRuntime ?? null,
+      language: show.language || "",
+      status: show.status || "",
+      service: show.network?.name || show.webChannel?.name || "",
+    }));
+
+    setResults(normalized);
+  } catch (err) {
+    console.error(err);
+    toast("Could not load default shows");
+  } finally {
+    setBusy(false);
+  }
+}
 
   async function search(term) {
     const s = term.trim();
@@ -134,6 +188,7 @@ export default function MoviesShows() {
     return 0;
   });
 
+  const limitedResults = visibleResults.slice(0, itemsToShow);
   //build dynamic dropdown options from current results
   const typeOptions = Array.from(new Set(results.map(r => r.type))).sort();
   const genreOptions = Array.from(
@@ -367,7 +422,7 @@ onChange={(e) => setLanguageFilter(e.target.value)}
   {/* Results grid */}
   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
     {/* use visibleResults instead of raw results */}
-    {visibleResults.map(r => (
+    {limitedResults.map(r => (
       <article
         key={r.id}
         className="bg-white/5 border border-white/10 rounded-lg overflow-hidden"
@@ -405,6 +460,16 @@ onChange={(e) => setLanguageFilter(e.target.value)}
     ))}
   </div>
 
+{limitedResults.length < visibleResults.length && (
+  <div className="mt-4 flex justify-center">
+    <button
+      className="px-4 py-2 rounded-md bg-white/10 text-white hover:bg-white/20 text-sm"
+      onClick={() => setItemsToShow(prev => prev + PAGE_SIZE)}
+    >
+      Load more
+    </button>
+  </div>
+)}
   {/* Empty state */}
   {!busy && results.length > 0 && visibleResults.length === 0 && (
   <div className="text-slate-300">
