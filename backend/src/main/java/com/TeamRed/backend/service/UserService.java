@@ -19,20 +19,6 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    // Create user with no duplicate usernames or emails
-    public User createUser(User user) {
-        if (userRepository.existsByUsername(user.getUsername())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already exists");
-        }
-        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "Email already registered"
-            );
-        }
-
-        return userRepository.save(user);
-    }
 
     // Get all users
     public List<User> getAllUsers() {

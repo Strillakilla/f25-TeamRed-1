@@ -25,16 +25,6 @@ public class UserController {
         this.userService = userService;
     }
 
-    @Operation(
-            summary = "Create a new user",
-            description = "Registers a new user in the database. Username and email must be unique."
-    )
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<User> createUser(@RequestBody User user) {
-        User newUser = userService.createUser(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(newUser);
-    }
 
     @Operation(
             summary = "Retrieve all users",
@@ -46,15 +36,6 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
-    @Operation(
-            summary = "Get a user by ID",
-            description = "Fetches a user by their unique ID."
-    )
-    @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
-        User user = userService.getUserById(id);
-        return ResponseEntity.ok(user);
-    }
 
     @Operation(
             summary = "Get a user by email",
