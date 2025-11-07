@@ -13,8 +13,8 @@ export default function GetStarted() {
     className="mx-auto mb-3 w-20 h-auto rounded-2xl shadow-lg"
   />
     <h1 className="text-4xl sm:text-5xl font-extrabold mb-5 tracking-tight">
-    <span className="text-teal-300">Binge</span>
-    <span className="text-white">Buddy</span>
+    <span className="text-white">Binge</span>
+    <span className="text-cyan-500">Buddy</span>
     </h1>
 
     <p className="text-lg text-slate-100/90 max-w-2xl mx-auto mb-4 leading-relaxed">
