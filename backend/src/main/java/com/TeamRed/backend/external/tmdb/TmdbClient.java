@@ -21,18 +21,18 @@ public class TmdbClient {
 
     // MOVIE CALLS
 
-    public String getNowPlaying(String language, Integer page, String region) {
+    public Object getNowPlaying(Integer page, String language, String region) {
         String url = UriComponentsBuilder.fromUriString(baseUrl + "/movie/now_playing")
                 .queryParam("api_key", apiKey)
                 .queryParamIfPresent("language", Optional.ofNullable(language))
                 .queryParamIfPresent("page", Optional.ofNullable(page))
                 .queryParamIfPresent("region", Optional.ofNullable(region))
                 .toUriString();
-        return restTemplate.getForObject(url, String.class);
+        return fetch(url);
     }
 
 
-    public String getPopularMovies(Integer page, String language, String region) {
+    public Object getPopularMovies(Integer page, String language, String region) {
         String url = UriComponentsBuilder
                 .fromUriString(baseUrl + "/movie/popular")
                 .queryParam("api_key", apiKey)
@@ -41,32 +41,33 @@ public class TmdbClient {
                 .queryParamIfPresent("region", Optional.ofNullable(region))
                 .toUriString();
 
-        return restTemplate.getForObject(url, String.class);
+        return fetch(url);
     }
 
-    public String getTopRated(String language, Integer page, String region) {
+    public Object getTopRated(Integer page, String language, String region) {
         String url = UriComponentsBuilder.fromUriString(baseUrl + "/movie/top_rated")
                 .queryParam("api_key", apiKey)
                 .queryParamIfPresent("language", Optional.ofNullable(language))
                 .queryParamIfPresent("page", Optional.ofNullable(page))
                 .queryParamIfPresent("region", Optional.ofNullable(region))
                 .toUriString();
-        return restTemplate.getForObject(url, String.class);
+        return fetch(url);
     }
 
-    public String getUpcoming(String language, Integer page, String region) {
+    public Object getUpcoming(Integer page, String language, String region) {
         String url = UriComponentsBuilder.fromUriString(baseUrl + "/movie/upcoming")
                 .queryParam("api_key", apiKey)
                 .queryParamIfPresent("language", Optional.ofNullable(language))
                 .queryParamIfPresent("page", Optional.ofNullable(page))
                 .queryParamIfPresent("region", Optional.ofNullable(region))
                 .toUriString();
-        return restTemplate.getForObject(url, String.class);
+
+        return fetch(url);
     }
 
 
 
-    public String searchMovies(String query, Boolean includeAdult, Integer page, String language, String region, String year, String primaryReleaseYear) {
+    public Object searchMovies(String query, Boolean includeAdult, Integer page, String language, String region, String year, String primaryReleaseYear) {
 
         String url = UriComponentsBuilder.fromUriString(baseUrl + "/search/movie")
                 .queryParam("api_key", apiKey)
@@ -79,17 +80,26 @@ public class TmdbClient {
                 .queryParamIfPresent("primary_release_year", Optional.ofNullable(primaryReleaseYear))
                 .toUriString();
 
-        return restTemplate.getForObject(url, String.class);
+        return fetch(url);
     }
 
 
-    public String getMovieDetails(long tmdbId, String language) {
+    public Object getMovieDetails(long tmdbId, String language) {
         String url = UriComponentsBuilder.fromUriString(baseUrl + "/movie/" + tmdbId)
                 .queryParam("api_key", apiKey)
                 .queryParamIfPresent("language", Optional.ofNullable(language))
                 .toUriString();
 
-        return restTemplate.getForObject(url, String.class);
+        return fetch(url);
+    }
+
+    public Object getMovieCredits(long tmdbId, String language) {
+        String url = UriComponentsBuilder.fromUriString(baseUrl + "/movie/" + tmdbId + "/credits")
+                .queryParam("api_key", apiKey)
+                .queryParamIfPresent("language", Optional.ofNullable(language))
+                .toUriString();
+
+        return fetch(url);
     }
 
 
@@ -99,7 +109,7 @@ public class TmdbClient {
 
     // MULTI CALLS
 
-    public String searchMulti(String query, Boolean includeAdult, String language, Integer page) {
+    public Object searchMulti(String query, Boolean includeAdult, String language, Integer page) {
 
         String url = UriComponentsBuilder.fromUriString(baseUrl + "/search/multi")
                 .queryParam("api_key", apiKey)
@@ -109,7 +119,13 @@ public class TmdbClient {
                 .queryParamIfPresent("page", Optional.ofNullable(page))
                 .toUriString();
 
-        return restTemplate.getForObject(url, String.class);
+        return fetch(url);
+    }
+
+
+    // HELPERS
+    private Object fetch(String url) {
+        return restTemplate.getForObject(url, Object.class);
     }
 
 }

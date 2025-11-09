@@ -28,7 +28,7 @@ public class MediaController {
             description = "Searches movies, TV shows, and people."
     )
     @GetMapping("/search/all")
-    public ResponseEntity<String> searchAll(@RequestParam String query, @RequestParam(required = false) Boolean includeAdult, @RequestParam(required = false) String language, @RequestParam(required = false) Integer page) {
+    public ResponseEntity<Object> searchAll(@RequestParam String query, @RequestParam(required = false) Boolean includeAdult, @RequestParam(required = false) String language, @RequestParam(required = false) Integer page) {
         return ResponseEntity.ok(tmdbClient.searchMulti(query, includeAdult, language, page));
     }
 
@@ -36,7 +36,7 @@ public class MediaController {
             summary = "Search for movies",
             description = "Searches for movies by title and some optional filters.")
     @GetMapping("/search/movies")
-    public ResponseEntity<String> searchMovies(@RequestParam String query, @RequestParam(required = false) Boolean includeAdult,
+    public ResponseEntity<Object> searchMovies(@RequestParam String query, @RequestParam(required = false) Boolean includeAdult,
                                                @RequestParam(required = false) Integer page,
                                                @RequestParam(required = false) String language,
                                                @RequestParam(required = false) String region,
@@ -49,17 +49,17 @@ public class MediaController {
             summary = "Now Playing",
             description = "Retrieves movies that are currently in theatres")
     @GetMapping("/movies/now_playing")
-    public ResponseEntity<String> getNowPlaying(@RequestParam(required = false) Integer page,
+    public ResponseEntity<Object> getNowPlaying(@RequestParam(required = false) Integer page,
                                                    @RequestParam(required = false) String language,
                                                    @RequestParam(required = false) String region) {
-        return ResponseEntity.ok(tmdbClient.getPopularMovies(page, language, region));
+        return ResponseEntity.ok(tmdbClient.getNowPlaying(page, language, region));
     }
 
     @Operation(
             summary = "Popular",
             description = "Retrieves popular movies.")
     @GetMapping("/movies/popular")
-    public ResponseEntity<String> getPopularMovies(@RequestParam(required = false) Integer page,
+    public ResponseEntity<Object> getPopularMovies(@RequestParam(required = false) Integer page,
                                                    @RequestParam(required = false) String language,
                                                    @RequestParam(required = false) String region) {
         return ResponseEntity.ok(tmdbClient.getPopularMovies(page, language, region));
@@ -69,28 +69,37 @@ public class MediaController {
             summary = "Top Rated",
             description = "Retrieves top rated movies.")
     @GetMapping("/movies/top_rated")
-    public ResponseEntity<String> getTopRated(@RequestParam(required = false) Integer page,
+    public ResponseEntity<Object> getTopRated(@RequestParam(required = false) Integer page,
                                                    @RequestParam(required = false) String language,
                                                    @RequestParam(required = false) String region) {
-        return ResponseEntity.ok(tmdbClient.getPopularMovies(page, language, region));
+        return ResponseEntity.ok(tmdbClient.getTopRated(page, language, region));
     }
 
     @Operation(
             summary = "Upcoming",
             description = "Retrieves upcoming movies.")
     @GetMapping("/movies/upcoming")
-    public ResponseEntity<String> getUpcoming(@RequestParam(required = false) Integer page,
+    public ResponseEntity<Object> getUpcoming(@RequestParam(required = false) Integer page,
                                                    @RequestParam(required = false) String language,
                                                    @RequestParam(required = false) String region) {
-        return ResponseEntity.ok(tmdbClient.getPopularMovies(page, language, region));
+        return ResponseEntity.ok(tmdbClient.getUpcoming(page, language, region));
     }
 
     @Operation(
             summary = "Get movie details",
             description = "Retrieves detailed information about a specific movie by its TMDB ID.")
     @GetMapping("/movies/{tmdbId}")
-    public ResponseEntity<String> getMovieDetails(@PathVariable long tmdbId,
+    public ResponseEntity<Object> getMovieDetails(@PathVariable long tmdbId,
                                                   @RequestParam(required = false) String language) {
         return ResponseEntity.ok(tmdbClient.getMovieDetails(tmdbId, language));
+    }
+
+    @Operation(
+            summary = "Get movie credits",
+            description = "Retrieves detailed information about the cast and crew of a specific movie by its TMDB ID.")
+    @GetMapping("/movies/{tmdbId}/credits")
+    public ResponseEntity<Object> getMovieCredits(@PathVariable long tmdbId,
+                                                  @RequestParam(required = false) String language) {
+        return ResponseEntity.ok(tmdbClient.getMovieCredits(tmdbId, language));
     }
 }
