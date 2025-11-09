@@ -13,8 +13,8 @@ export default function GetStarted() {
     className="mx-auto mb-3 w-20 h-auto rounded-2xl shadow-lg"
   />
     <h1 className="text-4xl sm:text-5xl font-extrabold mb-5 tracking-tight">
-    <span className="text-teal-300">Binge</span>
-    <span className="text-white">Buddy</span>
+    <span className="text-white">Binge</span>
+    <span className="text-cyan-400">Buddy</span>
     </h1>
 
     <p className="text-lg text-slate-100/90 max-w-2xl mx-auto mb-4 leading-relaxed">
@@ -23,7 +23,7 @@ export default function GetStarted() {
     </p>
 
     <p className="text-lg text-slate-100/65 max-w-2xl mx-auto mb-8 leading-relaxed">
-    Packed with <span className="text-teal-300 font-semibold"> powerful filters </span> 
+    Packed with <span className="text-cyan-400 font-semibold"> powerful filters </span> 
     and an <span className="text-purple-300 font-semibold">intelligent chatbot </span> 
     that helps you discover what to watch next — everything you need to binge smarter,
     all with BingeBuddy.
@@ -31,7 +31,7 @@ export default function GetStarted() {
 
      <button
   onClick={() => navigate("/create-account")}
-  className="px-8 py-3 rounded-full bg-gradient-to-r from-teal-400 to-purple-500
+  className="px-8 py-3 rounded-full bg-gradient-to-r from-blue-500 to-purple-600
              text-white font-semibold text-lg shadow-lg 
              hover:shadow-xl hover:scale-105 active:scale-95
              focus-visible:outline-none focus-visible:ring-2 
