@@ -15,7 +15,6 @@ import java.util.Map;
 )
 @RestController
 @RequestMapping("/api/media")
-@CrossOrigin(origins = "*")
 public class MediaController {
 
     private final TmdbClient tmdbClient;
