@@ -1,6 +1,8 @@
 // src/pages/CreateAccountForm.jsx
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8080";
 
 export default function CreateAccountForm() {
   const navigate = useNavigate();
@@ -28,18 +30,17 @@ export default function CreateAccountForm() {
   const pwStrongScore = [pwLen, pwHasUpper, pwHasLower, pwHasDigit, pwHasSymbol].filter(Boolean).length;
   const pwStrongLabel =
     pwStrongScore <= 2 ? "Weak" : pwStrongScore === 3 ? "Okay" : pwStrongScore === 4 ? "Good" : "Strong";
-
   const pwMatches = pw && pw2 && pw === pw2;
 
   const formValid = emailOk && pwLen && pwHasUpper && pwHasLower && pwHasDigit && pwMatches && agree;
 
   useEffect(() => {
     if (!toast) return;
-    const id = setTimeout(() => setToast(""), 1500);
+    const id = setTimeout(() => setToast(""), 1600);
     return () => clearTimeout(id);
   }, [toast]);
 
-  const onSubmit = async (e) => {
+  async function onSubmit(e) {
     e.preventDefault();
     setTouched({ email: true, pw: true, pw2: true });
 
@@ -48,18 +49,51 @@ export default function CreateAccountForm() {
       return;
     }
 
-    // Simulate async submit (replace with real API later)
     try {
       setSubmitting(true);
-      await new Promise((r) => setTimeout(r, 600));
-      // Persist a demo “signed-in” flag if you like:
-      localStorage.setItem("bb.user.email", email.trim());
+
+      // 1) Register
+      const regRes = await fetch(`${API_BASE}/api/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: email.trim().split("@")[0],
+          email: email.trim(),
+          password: pw,
+        }),
+      });
+      if (!regRes.ok) {
+        const msg = await regRes.text();
+        throw new Error(msg || `Register failed (${regRes.status})`);
+      }
+
+      // 2) Login
+      const loginRes = await fetch(`${API_BASE}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), password: pw }),
+      });
+      if (!loginRes.ok) {
+        const msg = await loginRes.text();
+        throw new Error(msg || `Login failed (${loginRes.status})`);
+      }
+
+      const data = await loginRes.json(); // { token, username, email, id }
+
+      // 3) Persist auth
+      localStorage.setItem("bb.jwt", data.token);
+      localStorage.setItem("bb.user.email", data.email || email.trim());
+      if (data.username) localStorage.setItem("bb.user.name", data.username);
+
       setToast("Account created");
-      navigate("/subscriptions");
+      // 4) In-app navigation
+      navigate("/home");
+    } catch (err) {
+      setToast(String(err.message || err));
     } finally {
       setSubmitting(false);
     }
-  };
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6">
@@ -110,17 +144,23 @@ export default function CreateAccountForm() {
               </button>
             </div>
 
-            {/* Strength meter */}
             <div className="mt-2">
               <div className="h-1 w-full bg-white/10 rounded">
                 <div
-                  className={`h-1 rounded ${pwStrongScore <= 2 ? "bg-red-400 w-1/4" : pwStrongScore === 3 ? "bg-yellow-400 w-2/4" : pwStrongScore === 4 ? "bg-teal-400 w-3/4" : "bg-emerald-500 w-full"}`}
+                  className={`h-1 rounded ${
+                    pwStrongScore <= 2
+                      ? "bg-red-400 w-1/4"
+                      : pwStrongScore === 3
+                      ? "bg-yellow-400 w-2/4"
+                      : pwStrongScore === 4
+                      ? "bg-teal-400 w-3/4"
+                      : "bg-emerald-500 w-full"
+                  }`}
                 />
               </div>
               <p className="mt-1 text-xs text-slate-200">Strength: {pw ? pwStrongLabel : "—"}</p>
             </div>
 
-            {/* Requirements */}
             {touched.pw && (
               <ul className="mt-2 text-xs space-y-1">
                 <Req ok={pwLen}>At least 8 characters</Req>
@@ -165,25 +205,30 @@ export default function CreateAccountForm() {
               onChange={(e) => setAgree(e.target.checked)}
             />
             <span>
-              I agree to the <span className="underline">Terms</span> and <span className="underline">Privacy Policy</span>.
+              I agree to the <span className="underline">Terms</span> and{" "}
+              <span className="underline">Privacy Policy</span>.
             </span>
           </label>
 
-          {/* Actions */}
+          {/* Submit */}
           <button
             type="submit"
             disabled={!formValid || submitting}
             className={`w-full px-6 py-3 rounded-full font-semibold text-white transition
-              ${formValid && !submitting
-                ? "bg-gradient-to-r from-teal-400 to-purple-600 hover:opacity-90"
-                : "bg-white/10 cursor-not-allowed text-white/70"}`}
+              ${
+                formValid && !submitting
+                  ? "bg-gradient-to-r from-teal-400 to-purple-600 hover:opacity-90"
+                  : "bg-white/10 cursor-not-allowed text-white/70"
+              }`}
           >
             {submitting ? "Creating..." : "Create Account"}
           </button>
 
           <p className="text-xs text-slate-300 text-center">
             Already have an account?{" "}
-            <a href="/login" className="underline hover:opacity-90">Log in</a>
+            <Link to="/login" className="underline hover:opacity-90">
+              Log in
+            </Link>
           </p>
         </form>
       </div>
