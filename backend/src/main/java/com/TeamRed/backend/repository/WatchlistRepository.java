@@ -13,9 +13,8 @@ public interface WatchlistRepository extends JpaRepository<Watchlist, Long> {
 
     List<Watchlist> findAllByUserUserId(Long userId);
 
-    // Check if a specific media item is already in the user's watchlist
     boolean existsByUserUserIdAndMediaId(Long userId, Long mediaId);
 
-    // Optional: delete an item from the user's watchlist
-    void deleteByUserUserIdAndMediaId(Long userId, Long mediaId);
+    void deleteByUserUserIdAndMediaIdAndMediaType(Long userId, Long mediaId, String mediaType);
+
 }

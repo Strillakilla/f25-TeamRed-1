@@ -15,7 +15,7 @@ import java.util.List;
         description = "Endpoints for managing user accounts"
 )
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/user")
 @CrossOrigin(origins = "*") // Allow frontend calls from anywhere during development
 public class UserController {
 

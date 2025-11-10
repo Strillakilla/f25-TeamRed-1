@@ -73,7 +73,7 @@ public class AuthController {
                 "token", token,
                 "username", user.getUsername(),
                 "email", user.getEmail(),
-                "id", user.getId()
+                "id", user.getUserId()
         ));
     }
 
@@ -93,7 +93,7 @@ public class AuthController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
         return ResponseEntity.ok(Map.of(
-                "id", user.getId(),
+                "id", user.getUserId(),
                 "username", user.getUsername(),
                 "email", user.getEmail()
         ));

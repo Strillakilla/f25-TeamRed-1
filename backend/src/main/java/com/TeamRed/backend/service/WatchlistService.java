@@ -19,15 +19,20 @@ public class WatchlistService {
         this.tmdbClient = tmdbClient;
     }
 
-    public void addToWatchlist(User user, Long mediaId, String mediaType) {
-        if (!watchlistRepository.existsByUserUserIdAndMediaId(user.getUserId(), mediaId)) {
-            watchlistRepository.save(new Watchlist(user, mediaId, mediaType));
+    public void addToWatchlist(Long userId, Long mediaId, String mediaType) {
+        if (!watchlistRepository.existsByUserUserIdAndMediaId(userId, mediaId)) {
+            User user = new User();
+            user.setUserId(userId);
+            Watchlist entry = new Watchlist(user, mediaId, mediaType);
+            watchlistRepository.save(entry);
         }
     }
 
-    public void removeFromWatchlist(Long userId, Long mediaId) {
-        watchlistRepository.deleteByUserUserIdAndMediaId(userId, mediaId);
+
+    public void removeFromWatchlist(Long userId, Long mediaId, String mediaType) {
+        watchlistRepository.deleteByUserUserIdAndMediaIdAndMediaType(userId, mediaId, mediaType);
     }
+
 
     public List<Object> getUserWatchlist(Long userId) {
         return watchlistRepository.findAllByUserUserId(userId).stream()
