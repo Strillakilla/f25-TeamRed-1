@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { loginAuth, whoAmI } from "../utils/api"; // <-- use your api helpers
 
 export default function Login() {
   const navigate = useNavigate();
@@ -19,7 +20,6 @@ export default function Login() {
   async function onSubmit(e) {
     e.preventDefault();
     setError("");
-
     if (!formValid) {
       setError("Please enter a valid email and an 8+ character password.");
       return;
@@ -28,21 +28,26 @@ export default function Login() {
     try {
       setSubmitting(true);
 
-      // Fake async auth — replace with real API later
-      await new Promise((r) => setTimeout(r, 500));
+      // 1) call backend
+      const auth = await loginAuth(email.trim(), pw); 
+      // expected shape: { token, username, email, id }
 
-      // “Persist session”
-      if (remember) {
-        localStorage.setItem("bb.user.email", email.trim());
-        localStorage.setItem("bb.auth.remember", "true");
-      } else {
-        localStorage.removeItem("bb.user.email");
-        localStorage.setItem("bb.auth.remember", "false");
-      }
+      // 2) persist session (JWT used by api.js Authorization header)
+      localStorage.setItem("bb.jwt", auth.token);
+      localStorage.setItem("bb.user.email", auth.email || email.trim());
+      localStorage.setItem("bb.user.name", auth.username || "");
 
+      // optional “remember me” switch
+      localStorage.setItem("bb.auth.remember", remember ? "true" : "false");
+
+      // 3) sanity check the token works (optional but useful during dev)
+      //    This should return 200 with current user when Authorization header is present
+      try { await whoAmI(); } catch { /* ignore; you can log if you want */ }
+
+      // 4) go to app
       navigate("/home");
-    } catch {
-      setError("Login failed. Please try again.");
+    } catch (err) {
+      setError(typeof err?.message === "string" ? err.message : "Login failed.");
     } finally {
       setSubmitting(false);
     }
@@ -60,7 +65,6 @@ export default function Login() {
         )}
 
         <form onSubmit={onSubmit} className="space-y-5">
-          {/* Email */}
           <div>
             <label className="block text-sm mb-1">Email</label>
             <input
@@ -75,7 +79,6 @@ export default function Login() {
             )}
           </div>
 
-          {/* Password */}
           <div>
             <label className="block text-sm mb-1">Password</label>
             <div className="relative">
@@ -100,7 +103,6 @@ export default function Login() {
             )}
           </div>
 
-          {/* Remember / Forgot */}
           <div className="flex items-center justify-between">
             <label className="flex items-center gap-2 text-sm">
               <input
@@ -112,17 +114,15 @@ export default function Login() {
               <span>Remember me</span>
             </label>
 
-
             <button
-                type="button"
-                onClick={() => navigate("/forgot-password")}
-                className="text-sm text-teal-300 hover:text-teal-200"
+              type="button"
+              onClick={() => navigate("/forgot-password")}
+              className="text-sm text-teal-300 hover:text-teal-200"
             >
-                Forgot your password?
+              Forgot your password?
             </button>
           </div>
 
-          {/* Submit */}
           <button
             type="submit"
             disabled={!formValid || submitting}
