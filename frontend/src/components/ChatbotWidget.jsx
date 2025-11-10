@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import bot from "../assets/bot.png";
 
 const STORAGE_KEY = "bb.chat.v1";
 
@@ -13,10 +14,7 @@ export default function ChatbotWidget() {
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
-    // autoscroll
-    if (listRef.current) {
-      listRef.current.scrollTop = listRef.current.scrollHeight;
-    }
+    if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
   }, [messages]);
 
   function send() {
@@ -25,8 +23,6 @@ export default function ChatbotWidget() {
     const userMsg = { id: crypto.randomUUID(), role: "user", text, ts: Date.now() };
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
-
-    // Mock assistant reply (replace with real API later)
     setTimeout(() => {
       const botMsg = {
         id: crypto.randomUUID(),
@@ -39,46 +35,28 @@ export default function ChatbotWidget() {
   }
 
   function mockReply(text) {
-    // Tiny demo logic — customize as you like
-    if (/watchlist/i.test(text)) {
-      return "Want to add something to your Watchlist? Try the Watchlist page.";
-    }
-    if (/subscription/i.test(text)) {
-      return "Subscriptions live under the Subscriptions tab. You can add or edit plans there.";
-    }
+    if (/watchlist/i.test(text)) return "Want to add something to your Watchlist? Try the Watchlist page.";
+    if (/subscription/i.test(text)) return "Subscriptions live under the Subscriptions tab. You can add or edit plans there.";
     return "I’m your BingeBuddy! Ask me about watchlists, subscriptions, or what to watch next.";
   }
 
   return (
     <>
-      {/* Toggle Button (bottom-left) */}
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label={open ? "Close chat" : "Open chat"}
         className="fixed bottom-4 left-4 z-50 flex items-center gap-2 rounded-full bg-white/10 backdrop-blur
                    border border-white/15 px-3 py-2 hover:bg-white/20 transition"
       >
-        <img
-          src="/src/assets/bot.png"
-          alt="BingeBuddy Bot"
-          className="h-8 w-8 rounded-full object-cover"
-        />
+        <img src={bot} alt="BingeBuddy Bot" className="h-8 w-8 rounded-full object-cover" />
         <span className="hidden sm:inline text-sm text-white">Chat</span>
       </button>
 
-      {/* Panel */}
       {open && (
-        <div
-          className="fixed bottom-20 left-4 z-50 w-[90vw] max-w-sm rounded-2xl overflow-hidden
-                     bg-[#0b0b12]/95 border border-white/10 shadow-2xl"
-        >
-          {/* Header */}
+        <div className="fixed bottom-20 left-4 z-50 w-[90vw] max-w-sm rounded-2xl overflow-hidden
+                        bg-[#0b0b12]/95 border border-white/10 shadow-2xl">
           <div className="flex items-center gap-3 px-3 py-2 bg-white/5 border-b border-white/10">
-            <img
-              src="/src/assets/bot.png"
-              alt="BingeBuddy Bot"
-              className="h-8 w-8 rounded-full object-cover"
-            />
+            <img src={bot} alt="BingeBuddy Bot" className="h-8 w-8 rounded-full object-cover" />
             <div className="flex-1">
               <div className="text-sm font-semibold text-white">BingeBuddy Bot</div>
               <div className="text-[11px] text-slate-300">Ask me about your streaming</div>
@@ -92,24 +70,17 @@ export default function ChatbotWidget() {
             </button>
           </div>
 
-          {/* Messages */}
-          <div
-            ref={listRef}
-            className="max-h-80 overflow-y-auto p-3 space-y-2"
-          >
+          <div ref={listRef} className="max-h-80 overflow-y-auto p-3 space-y-2">
             {messages.length === 0 ? (
               <div className="text-xs text-slate-300/80">
                 Hi! I can help you add items to your Watchlist, manage Subscriptions,
                 or suggest something to watch.
               </div>
             ) : (
-              messages.map((m) => (
-                <Message key={m.id} role={m.role} text={m.text} />
-              ))
+              messages.map((m) => <Message key={m.id} role={m.role} text={m.text} />)
             )}
           </div>
 
-          {/* Input */}
           <div className="flex items-center gap-2 p-3 border-t border-white/10">
             <input
               value={input}
