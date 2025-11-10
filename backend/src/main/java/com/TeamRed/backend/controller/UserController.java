@@ -16,7 +16,6 @@ import java.util.List;
 )
 @RestController
 @RequestMapping("/api/user")
-@CrossOrigin(origins = "*") // Allow frontend calls from anywhere during development
 public class UserController {
 
     private final UserService userService;
