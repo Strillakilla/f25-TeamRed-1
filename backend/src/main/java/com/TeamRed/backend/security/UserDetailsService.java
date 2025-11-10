@@ -3,16 +3,15 @@ package com.TeamRed.backend.security;
 import com.TeamRed.backend.entity.User;
 import com.TeamRed.backend.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
-public class UserDetailsServiceImpl implements UserDetailsService {
+public class UserDetailsService implements org.springframework.security.core.userdetails.UserDetailsService {
 
     private final UserRepository userRepository;
 
-    public UserDetailsServiceImpl(UserRepository userRepository) {
+    public UserDetailsService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
