@@ -199,6 +199,126 @@ public class MediaController {
         return ResponseEntity.ok(tmdbClient.get(endpoint, new HashMap<>()));
     }
 
+    // ================= TV SERIES CALLS =================
+
+    @Operation(
+            summary = "Airing Today",
+            description = "Retrieves TV series airing today."
+    )
+    @GetMapping("/tv/airing_today")
+    public ResponseEntity<Object> getAiringTodaySeries(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) String language,
+            @RequestParam(required = false) String timezone) {
+
+        String endpoint = "/tv/airing_today";
+        Map<String, Object> params = buildParams(
+                "page", page,
+                "language", language,
+                "timezone", timezone
+        );
+
+        return ResponseEntity.ok(tmdbClient.get(endpoint, params));
+    }
+
+    @Operation(
+            summary = "On The Air",
+            description = "Retrieves TV series currently on the air."
+    )
+    @GetMapping("/tv/on_the_air")
+    public ResponseEntity<Object> getOnTheAirSeries(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) String language,
+            @RequestParam(required = false) String timezone) {
+
+        String endpoint = "/tv/on_the_air";
+        Map<String, Object> params = buildParams(
+                "page", page,
+                "language", language,
+                "timezone", timezone
+        );
+
+        return ResponseEntity.ok(tmdbClient.get(endpoint, params));
+    }
+
+    @Operation(
+            summary = "Popular Series",
+            description = "Retrieves popular TV series."
+    )
+    @GetMapping("/tv/popular")
+    public ResponseEntity<Object> getPopularSeries(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) String language) {
+
+        String endpoint = "/tv/popular";
+        Map<String, Object> params = buildParams(
+                "page", page,
+                "language", language
+        );
+
+        return ResponseEntity.ok(tmdbClient.get(endpoint, params));
+    }
+
+    @Operation(
+            summary = "Top Rated Series",
+            description = "Retrieves top-rated TV series."
+    )
+    @GetMapping("/tv/top_rated")
+    public ResponseEntity<Object> getTopRatedSeries(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) String language) {
+
+        String endpoint = "/tv/top_rated";
+        Map<String, Object> params = buildParams(
+                "page", page,
+                "language", language
+        );
+
+        return ResponseEntity.ok(tmdbClient.get(endpoint, params));
+    }
+
+    @Operation(
+            summary = "Get Series Details",
+            description = "Retrieves detailed information about a specific TV series by its TMDB ID."
+    )
+    @GetMapping("/tv/{tmdbId}")
+    public ResponseEntity<Object> getSeriesDetails(
+            @PathVariable long tmdbId,
+            @RequestParam(required = false) String language) {
+
+        String endpoint = "/tv/" + tmdbId;
+        Map<String, Object> params = buildParams("language", language);
+
+        return ResponseEntity.ok(tmdbClient.get(endpoint, params));
+    }
+
+    @Operation(
+            summary = "Get Series Aggregate Credits",
+            description = "Retrieves cast and crew information for a specific TV series by its TMDB ID."
+    )
+    @GetMapping("/tv/{tmdbId}/aggregate_credits")
+    public ResponseEntity<Object> getSeriesAggregateCredits(
+            @PathVariable long tmdbId,
+            @RequestParam(required = false) String language) {
+
+        String endpoint = "/tv/" + tmdbId + "/aggregate_credits";
+        Map<String, Object> params = buildParams("language", language);
+
+        return ResponseEntity.ok(tmdbClient.get(endpoint, params));
+    }
+
+    @Operation(
+            summary = "Get TV Series Watch Providers",
+            description = "Returns a list of watch providers for a specific TV series by region."
+    )
+    @GetMapping("/tv/{tmdbId}/watch/providers")
+    public ResponseEntity<Object> getSeriesWatchProviders(@PathVariable long tmdbId) {
+
+        String endpoint = "/tv/" + tmdbId + "/watch/providers";
+        return ResponseEntity.ok(tmdbClient.get(endpoint, null));
+    }
+
+
     // ================= HELPER =================
 
     private Map<String, Object> buildParams(Object... keyValuePairs) {
