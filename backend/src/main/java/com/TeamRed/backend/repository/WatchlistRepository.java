@@ -11,7 +11,7 @@ import java.util.Optional;
 public interface WatchlistRepository extends JpaRepository<Watchlist, Long> {
 
 
-    List<Watchlist> findByUserUserId(Long userId);
+    List<Watchlist> findAllByUserUserId(Long userId);
 
     // Check if a specific media item is already in the user's watchlist
     boolean existsByUserUserIdAndMediaId(Long userId, Long mediaId);

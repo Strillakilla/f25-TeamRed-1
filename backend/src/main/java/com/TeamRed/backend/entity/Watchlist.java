@@ -13,19 +13,19 @@ public class Watchlist {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long watchlist_id;
+    private Long watchlistId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    private Long media_id;
-    private String media_type;
+    private Long mediaId;
+    private String mediaType;
 
     public Watchlist(User user, Long mediaId, String mediaType) {
         this.user = user;
-        this.media_id = mediaId;
-        this.media_type = mediaType;
+        this.mediaId = mediaId;
+        this.mediaType = mediaType;
     }
 
 }
