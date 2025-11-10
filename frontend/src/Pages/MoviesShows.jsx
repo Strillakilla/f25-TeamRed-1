@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 // Same storage key as Watchlist.jsx so they share data
 const STORAGE_KEY = "watchlist.v1";
@@ -10,6 +11,7 @@ const TYPE_LABELS = {
   "Talk Show": "Talk Show",
   "Game Show": "Game Show",
 };
+
 
 // Reusable multi-select "dropdown" with checkmarks
 function MultiSelectDropdown({ placeholder, options, selected, onChange }) {
@@ -69,6 +71,7 @@ function MultiSelectDropdown({ placeholder, options, selected, onChange }) {
 }
 
 export default function MoviesShows() {
+  const navigate = useNavigate();
   const [q, setQ] = useState("");
   const [results, setResults] = useState([]);
   const [busy, setBusy] = useState(false);
@@ -987,46 +990,51 @@ const quickStatusValue =
 </div>
     {busy && <p className="text-sm text-slate-300">Searching…</p>}
 
-  {/* Results grid */}
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-    {/* use visibleResults instead of raw results */}
-    {limitedResults.map(r => (
-      <article
-        key={r.id}
-        className="bg-white/5 border border-white/10 rounded-lg overflow-hidden"
-      >
-        <div className="flex gap-3 p-3">
-          {r.poster ? (
-            <img
-              src={r.poster}
-              alt=""
-              className="w-20 h-28 object-cover rounded"
-              loading="lazy"
-            />
-          ) : (
-            <div className="w-20 h-28 bg-white/10 rounded" />
-          )}
-          <div className="flex-1">
-            <h3 className="font-semibold text-white">{r.title}</h3>
-            <p className="text-xs text-slate-300">
+{/* Results grid */}
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+  {limitedResults.map(r => (
+    <article
+      key={r.id}
+      className="bg-white/5 border border-white/10 rounded-lg overflow-hidden hover:bg-white/10 transition cursor-pointer"
+      onClick={() => navigate(`/details/${r.id}`, { state: { show: r } })}
+    >
+      <div className="flex gap-3 p-3">
+        {r.poster ? (
+          <img
+            src={r.poster}
+            alt=""
+            className="w-20 h-28 object-cover rounded"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-20 h-28 bg-white/10 rounded" />
+        )}
+        <div className="flex-1">
+          <h3 className="font-semibold text-white">{r.title}</h3>
+          <p className="text-xs text-slate-300">
             {TYPE_LABELS[r.type] || r.type}
             {r.year && ` • ${r.year}`}
             {r.rating != null && ` • ⭐ ${r.rating}`}
             {r.runtime != null && ` • ${r.runtime} min`}
             {r.language && ` • ${r.language}`}
             {r.service && ` • ${r.service}`}
-            </p>
-            <button
-              className="mt-3 px-3 py-1 text-sm rounded-md bg-teal-500 text-white hover:bg-teal-400"
-              onClick={() => addToWatchlist(r)}
-            >
-              Add to Watchlist
-            </button>
-          </div>
+          </p>
+
+          <button
+            className="mt-3 px-3 py-1 text-sm rounded-md bg-teal-500 text-white hover:bg-teal-400"
+            onClick={(e) => {
+              e.stopPropagation(); // ✅ prevents navigating when clicking the button
+              addToWatchlist(r);
+            }}
+          >
+            Add to Watchlist
+          </button>
         </div>
-      </article>
-    ))}
-  </div>
+      </div>
+    </article>
+  ))}
+</div>
+
 
 {limitedResults.length < visibleResults.length && (
   <div className="mt-4 flex justify-center">
