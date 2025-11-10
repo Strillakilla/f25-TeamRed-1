@@ -2,18 +2,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-/**
- * CONTINUE WATCHING
- * - Reads from localStorage("bb.continue.v1")
- * - Each item shape: { id, title, kind: "movie"|"show", poster?, progress: 0..100, lastWatchedAt }
- * - You can write to it from your player page later.
- */
 const CW_KEY = "bb.continue.v1";
 
 export default function Home() {
   const navigate = useNavigate();
 
-  // ---- Continue Watching (persisted) ----
+  /* -------------------------------------------------
+     CONTINUE WATCHING
+  ------------------------------------------------- */
   const [continueItems, setContinueItems] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem(CW_KEY) || "[]");
@@ -22,7 +18,6 @@ export default function Home() {
     }
   });
 
-  // Sort by most recently watched
   const continueSorted = useMemo(() => {
     return [...continueItems].sort((a, b) => {
       const at = a.lastWatchedAt ? new Date(a.lastWatchedAt).getTime() : 0;
@@ -31,89 +26,125 @@ export default function Home() {
     });
   }, [continueItems]);
 
-  // Example seed (dev only): uncomment once to see cards
+  /* -------------------------------------------------
+     API-BASED ROWS
+  ------------------------------------------------- */
+  const [suggested, setSuggested] = useState([]);
+  const [popular, setPopular] = useState([]);
+
   useEffect(() => {
-    if (continueItems.length === 0) {
-      const seed = [
-        { id: "cw1", title: "Arcane", kind: "show", progress: 45, lastWatchedAt: new Date().toISOString() },
-        { id: "cw2", title: "Dune", kind: "movie", progress: 10, lastWatchedAt: new Date(Date.now()-86400000).toISOString() },
-      ];
-      localStorage.setItem(CW_KEY, JSON.stringify(seed));
-      setContinueItems(seed);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    loadSuggested();
+    loadPopular();
   }, []);
 
-  // ---- Suggested & Popular (mock data for now) ----
-  const suggested = [
-    { id: "s1", title: "Bridgerton", kind: "show" },
-    { id: "s2", title: "The Bear", kind: "show" },
-    { id: "s3", title: "Everything Everywhere All at Once", kind: "movie" },
-    { id: "s4", title: "Fallout", kind: "show" },
-  ];
+  async function loadSuggested() {
+    try {
+      // Fake “recommended”: top-rated shows
+      const res = await fetch(`https://api.tvmaze.com/shows?page=1`);
+      const data = await res.json();
 
-  const popular = [
-    { id: "p1", title: "Deadpool & Wolverine", kind: "movie" },
-    { id: "p2", title: "Inside Out 2", kind: "movie" },
-    { id: "p3", title: "House of the Dragon", kind: "show" },
-    { id: "p4", title: "One Piece", kind: "show" },
-  ];
+      const topRated = data
+        .filter(s => s.rating?.average)
+        .sort((a, b) => b.rating.average - a.rating.average)
+        .slice(0, 20)
+        .map(normalizeShow);
+
+      setSuggested(topRated);
+    } catch (err) {
+      console.error("Failed to load suggested:", err);
+    }
+  }
+
+  async function loadPopular() {
+    try {
+      // TVMaze trending / popular (page 0)
+      const res = await fetch(`https://api.tvmaze.com/shows?page=0`);
+      const data = await res.json();
+
+      const trending = data
+        .sort((a, b) => (b.weight || 0) - (a.weight || 0))
+        .slice(0, 20)
+        .map(normalizeShow);
+
+      setPopular(trending);
+    } catch (err) {
+      console.error("Failed to load popular:", err);
+    }
+  }
+
+  /* -------------------------------------------------
+     Shared normalize formatter
+  ------------------------------------------------- */
+  function normalizeShow(show) {
+    return {
+      id: show.id,
+      title: show.name,
+      poster: show.image?.medium || show.image?.original || "",
+      kind: show.type?.toLowerCase() === "movie" ? "movie" : "show",
+      year: show.premiered?.slice(0, 4) || "",
+      rating: show.rating?.average ?? null,
+      genres: show.genres || [],
+    };
+  }
 
   return (
     <div className="space-y-10">
-      {/* Page header */}
+      {/* HEADER */}
       <header className="text-center">
         <h1 className="text-4xl font-extrabold">
           <span className="text-teal-300">Binge</span>
-          <span className="text-white-300">Buddy</span>
+          <span className="text-white">Buddy</span>
         </h1>
-        <p className="text-slate-200 mt-2">Your personal streaming dashboard</p>
+        <p className="text-slate-200 mt-2">
+          Your personal streaming dashboard
+        </p>
       </header>
 
-      {/* Continue Watching */}
+      {/* CONTINUE WATCHING */}
       <Row
         title="Continue Watching"
         items={continueSorted}
-        emptyHint="No in-progress titles. Start something from Movies & Shows."
+        emptyHint="No in-progress titles yet."
         renderCard={(it) => (
           <Card
             key={it.id}
             title={it.title}
+            poster={it.poster}
             kind={it.kind}
-            onClick={() => navigate("/watchlist")}
-            footer={
-              <Progress value={Math.max(0, Math.min(100, Number(it.progress) || 0))} />
-            }
+            onClick={() => navigate(`/details/${it.id}`)}
+            footer={<Progress value={it.progress || 0} />}
           />
         )}
       />
 
-      {/* Suggested For You (mock; ready for API) */}
+      {/* SUGGESTED FOR YOU */}
       <Row
         title="Suggested For You"
         items={suggested}
-        emptyHint="Suggestions will appear here."
+        emptyHint="Loading suggestions…"
         renderCard={(it) => (
           <Card
             key={it.id}
             title={it.title}
+            poster={it.poster}
             kind={it.kind}
-            onClick={() => navigate("/movies")}
+            onClick={() => navigate(`/details/${it.id}`)}
           />
         )}
       />
 
-      {/* Popular Now (mock; ready for API) */}
+      {/* POPULAR NOW */}
       <Row
         title="Popular Now"
         items={popular}
-        emptyHint="No trending items right now."
+        emptyHint="Loading trending titles…"
         renderCard={(it) => (
           <Card
             key={it.id}
             title={it.title}
+            poster={it.poster}
             kind={it.kind}
-            onClick={() => navigate("/movies")}
+            onClick={() => navigate(`/details/${it.id}`)}
           />
         )}
       />
@@ -121,17 +152,18 @@ export default function Home() {
   );
 }
 
-/* ----------------- Reusable UI ----------------- */
+/* -------------------------------------------------
+   UI COMPONENTS
+------------------------------------------------- */
 
 function Row({ title, items, emptyHint, renderCard }) {
   return (
     <section>
       <div className="flex items-end justify-between mb-3">
         <h2 className="text-2xl font-bold">{title}</h2>
-        {/* Optional: “See all” link can go to /movies with filters */}
       </div>
 
-      {(!items || items.length === 0) ? (
+      {!items || items.length === 0 ? (
         <div className="border border-white/10 rounded-xl p-6 text-center text-slate-300">
           {emptyHint}
         </div>
@@ -144,15 +176,22 @@ function Row({ title, items, emptyHint, renderCard }) {
   );
 }
 
-function Card({ title, kind, onClick, footer }) {
+function Card({ title, poster, kind, onClick, footer }) {
   return (
     <button
       onClick={onClick}
       className="min-w-[160px] text-left bg-white/5 border border-white/10 rounded-xl p-2 hover:bg-white/10 transition"
     >
-      {/* Poster placeholder (swap with real image later) */}
-      <div className="w-full h-[200px] bg-white/10 rounded-lg mb-2 flex items-center justify-center text-xs text-slate-300">
-        Poster
+      <div className="w-full h-[200px] bg-white/10 rounded-lg mb-2 overflow-hidden flex items-center justify-center">
+        {poster ? (
+          <img
+            src={poster}
+            alt={title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <span className="text-xs text-slate-300">No Image</span>
+        )}
       </div>
 
       <div className="font-semibold leading-tight line-clamp-2">{title}</div>
@@ -169,7 +208,6 @@ function Progress({ value }) {
       <div
         className="h-full bg-teal-400"
         style={{ width: `${value}%` }}
-        aria-label={`Progress ${value}%`}
       />
     </div>
   );
