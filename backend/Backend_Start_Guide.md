@@ -17,13 +17,13 @@ You do **not** need to install Maven — the included Maven Wrapper handles ever
 
 ##  How to Run the Backend
 
-### **Step 1 — Open the Project in Your IDE**
+### **Step 1 — Open the Project in Your IDE or Command Prompt (Recommended)**
 
 Open the `backend` folder as the **project root** in your IDE. If you aren't using an IDE, just **cd** into the backend folder.
 
 ### **Step 2 — Run Using the Built-in Terminal**
 
-In your IDE’s terminal, type:
+In your terminal, type:
 
 ```bash
 .\start-backend.cmd
@@ -58,7 +58,16 @@ You should see the following message:
 Backend successfully stopped. 
 ```
 ---
+## Default Development Account
+A persistent H2 database is included, so you do **not** need to register a new user each time you start the backend just login (Click Login not Create Account) with these credentials:
 
+```
+Email: johndoe@example.com
+Password: JohnDoe123
+```
+Then, you won't have to re-login the next time you open the frontend page since it stays stored in your browsers local storage. You only need to log in the first time. Then you will have access to the endpoints. But since everyone will use the same account, if you ever edit the database like add to "John Doe" watchlist it WILL be stored and pushed to github so we all will have that current watchlist for "John Doe".
+
+---
 ## Swagger UI
 
 ### NOTE: All GET requests under "Media" use TMDB (The Movie DataBase)'s API. If you want to know what information gets returned, just visit their API page for that particular request.
