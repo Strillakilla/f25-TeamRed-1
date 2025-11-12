@@ -1,6 +1,7 @@
 // src/Pages/Home.jsx
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { media, tmdbImg } from "../utils/api.js";
 
 const CW_KEY = "bb.continue.v1";
 const WATCHLIST_KEY = "watchlist.v1";
@@ -71,6 +72,7 @@ export default function Home() {
   /* ----------------------------------------------
      Sort CW
   ---------------------------------------------- */
+
   const continueSorted = useMemo(() => {
     return [...continueItems].sort((a, b) => {
       const at = new Date(a.lastWatchedAt || 0).getTime();
@@ -90,48 +92,57 @@ export default function Home() {
     loadPopular();
   }, []);
 
+   function normMovie(m) {
+    return {
+      id: m.id,
+      mediaType: "movie",
+      title: m.title || m.original_title,
+      poster: tmdbImg(m.poster_path),
+      kind: "movie",
+      year: (m.release_date || "").slice(0, 4),
+      rating: m.vote_average ?? null,
+    };
+  }
+  function normTv(t) {
+    return {
+      id: t.id,
+      mediaType: "tv",
+      title: t.name || t.original_name,
+      poster: tmdbImg(t.poster_path),
+      kind: "show",
+      year: (t.first_air_date || "").slice(0, 4),
+      rating: t.vote_average ?? null,
+    };
+  }
+
   async function loadSuggested() {
     try {
-      const res = await fetch(`https://api.tvmaze.com/shows?page=1`);
-      const data = await res.json();
-
-      const result = data
-        .filter(s => s.rating?.average)
-        .sort((a, b) => b.rating.average - a.rating.average)
-        .slice(0, 20)
-        .map(normalizeShow);
-
-      setSuggested(result);
-    } catch (err) {
-      console.error(err);
-    }
+      const [mtop, tvtop] = await Promise.all([
+        media.movies.topRated(1),
+        media.tv.topRated(1),
+      ]);
+      const items = [
+        ...(mtop?.results || []).map(normMovie),
+        ...(tvtop?.results || []).map(normTv),
+      ]
+        .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
+        .slice(0, 20);
+      setSuggested(items);
+    } catch (e) { console.error(e); }
   }
 
   async function loadPopular() {
     try {
-      const res = await fetch(`https://api.tvmaze.com/shows?page=0`);
-      const data = await res.json();
-
-      const result = data
-        .sort((a, b) => (b.weight || 0) - (a.weight || 0))
-        .slice(0, 20)
-        .map(normalizeShow);
-
-      setPopular(result);
-    } catch (err) {
-      console.error(err);
-    }
-  }
-
-  function normalizeShow(show) {
-    return {
-      id: show.id,
-      title: show.name,
-      poster: show.image?.medium || show.image?.original || "",
-      kind: show.type?.toLowerCase() === "movie" ? "movie" : "show",
-      year: show.premiered?.slice(0, 4),
-      rating: show.rating?.average
-    };
+      const [mpop, tvpop] = await Promise.all([
+        media.movies.popular(1),
+        media.tv.popular(1),
+      ]);
+      const items = [
+        ...(mpop?.results || []).map(normMovie),
+        ...(tvpop?.results || []).map(normTv),
+      ].slice(0, 20);
+      setPopular(items);
+    } catch (e) { console.error(e); }
   }
 
   /* ----------------------------------------------
@@ -183,11 +194,11 @@ export default function Home() {
         emptyHint="Loading suggestions…"
         renderCard={(it) => (
           <Card
-            key={it.id}
+            key={`${it.mediaType}-${it.id}`}
             title={it.title}
             poster={it.poster}
             kind={it.kind}
-            onClick={() => navigate(`/details/${it.id}`)}
+            onClick={() => navigate(`/details/${it.mediaType}/${it.id}`)}
           />
         )}
       />
@@ -199,11 +210,11 @@ export default function Home() {
         emptyHint="Loading trending titles…"
         renderCard={(it) => (
           <Card
-            key={it.id}
+            key={`${it.mediaType}-${it.id}`}
             title={it.title}
             poster={it.poster}
             kind={it.kind}
-            onClick={() => navigate(`/details/${it.id}`)}
+            onClick={() => navigate(`/details/${it.mediaType}/${it.id}`)}
           />
         )}
       />

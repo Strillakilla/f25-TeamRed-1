@@ -38,7 +38,7 @@ export default function App() {
           <Route path="/watchlist" element={<Watchlist />} />
           <Route path="/movies" element={<MoviesShows />} />
           <Route path="/security" element={<Security />} />
-          <Route path="/details/:id" element={<Details />} />
+          <Route path="/details/:type/:id" element={<Details />} />
         </Routes>
         </main>
              {/* Floating bot — always visible */}
