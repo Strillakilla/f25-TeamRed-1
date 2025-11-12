@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { media, tmdbImg } from "../utils/api.js";
+import { fetchPrimaryLabel } from "../utils/watchLabel";
 
 // Same storage key as Watchlist.jsx so they share data
 const STORAGE_KEY = "watchlist.v1";
@@ -70,6 +71,31 @@ function MultiSelectDropdown({ placeholder, options, selected, onChange }) {
     </div>
   );
 }
+
+function PosterWithRibbon({ poster, mediaType, id, item }) {
+  const [label, setLabel] = useState("");
+
+  useEffect(() => {
+    if (!mediaType || !id) return;
+    fetchPrimaryLabel(mediaType, id, item ?? {}).then(setLabel);
+  }, [mediaType, id, item?.release_date, item?.first_air_date]);
+
+  return (
+    <div className="relative w-20 h-28">
+      {poster ? (
+        <img src={poster} alt="" className="w-full h-full object-cover rounded" loading="lazy" />
+      ) : (
+        <div className="w-full h-full bg-white/10 rounded" />
+      )}
+      {label && (
+        <div className="absolute left-1 top-1 px-1.5 py-0.5 text-[10px] rounded bg-black/70 border border-white/15 font-semibold">
+          {label}
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 export default function MoviesShows() {
   const navigate = useNavigate();
@@ -1032,28 +1058,22 @@ const quickStatusValue =
       className="bg-white/5 border border-white/10 rounded-lg overflow-hidden hover:bg-white/10 transition cursor-pointer"
       onClick={() => navigate(`/details/${r.mediaType}/${r.id}`, { state: { show: r } })}
     >
-      <div className="flex gap-3 p-3">
-        {r.poster ? (
-          <img
-            src={r.poster}
-            alt=""
-            className="w-20 h-28 object-cover rounded"
-            loading="lazy"
-          />
-        ) : (
-          <div className="w-20 h-28 bg-white/10 rounded" />
-        )}
-        <div className="flex-1">
-          <h3 className="font-semibold text-white">{r.title}</h3>
-          <p className="text-xs text-slate-300">
-            {TYPE_LABELS[r.type] || r.type}
-            {r.year && ` • ${r.year}`}
-            {r.rating != null && ` • ⭐ ${r.rating}`}
-            {r.runtime != null && ` • ${r.runtime} min`}
-            {r.language && ` • ${r.language}`}
-            {r.service && ` • ${r.service}`}
-          </p>
-
+<div className="flex gap-3 p-3">
+  <PosterWithRibbon
+    poster={r.poster}
+    mediaType={r.mediaType}
+    id={r.id}
+    item={{ release_date: r.release_date, first_air_date: r.first_air_date }}
+  />
+  <div className="flex-1">
+    <h3 className="font-semibold text-white">{r.title}</h3>
+    <p className="text-xs text-slate-300">
+      {(TYPE_LABELS[r.type] || r.type)}
+      {r.year && ` • ${r.year}`}
+      {r.rating != null && ` • ⭐ ${r.rating}`}
+      {r.runtime != null && ` • ${r.runtime} min`}
+      {r.language && ` • ${r.language}`}
+    </p>
           <button
             className="mt-3 px-3 py-1 text-sm rounded-md bg-teal-500 text-white hover:bg-teal-400"
             onClick={(e) => {
@@ -1094,3 +1114,4 @@ const quickStatusValue =
 </div>
 );
 }
+

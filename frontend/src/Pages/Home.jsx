@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { media, tmdbImg } from "../utils/api.js";
+import { fetchPrimaryLabel } from "../utils/watchLabel";
 
 const CW_KEY = "bb.continue.v1";
 const WATCHLIST_KEY = "watchlist.v1";
@@ -125,28 +126,30 @@ useEffect(() => {
     loadPopular();
   }, []);
 
-   function normMovie(m) {
-    return {
-      id: m.id,
-      mediaType: "movie",
-      title: m.title || m.original_title,
-      poster: tmdbImg(m.poster_path),
-      kind: "movie",
-      year: (m.release_date || "").slice(0, 4),
-      rating: m.vote_average ?? null,
-    };
-  }
-  function normTv(t) {
-    return {
-      id: t.id,
-      mediaType: "tv",
-      title: t.name || t.original_name,
-      poster: tmdbImg(t.poster_path),
-      kind: "show",
-      year: (t.first_air_date || "").slice(0, 4),
-      rating: t.vote_average ?? null,
-    };
-  }
+  function normMovie(m) {
+  return {
+    id: m.id,
+    mediaType: "movie",
+    title: m.title || m.original_title,
+    poster: tmdbImg(m.poster_path),
+    kind: "movie",
+    year: (m.release_date || "").slice(0, 4),
+    release_date: m.release_date || "",   // ⬅ add
+    rating: m.vote_average ?? null,
+  };
+}
+function normTv(t) {
+  return {
+    id: t.id,
+    mediaType: "tv",
+    title: t.name || t.original_name,
+    poster: tmdbImg(t.poster_path),
+    kind: "show",
+    year: (t.first_air_date || "").slice(0, 4),
+    first_air_date: t.first_air_date || "",  // ⬅ add
+    rating: t.vote_average ?? null,
+  };
+}
 
   async function loadSuggested() {
     try {
@@ -206,6 +209,9 @@ useEffect(() => {
               title={it.title}
               poster={it.poster}
               kind={it.kind}
+              mediaType={it.mediaType || (it.kind === "movie" ? "movie" : "tv")}
+              id={it.id}
+              itemInfo={{ release_date: it.release_date, first_air_date: it.first_air_date }}
         onClick={() => {
           const mt =
             it.mediaType ||
@@ -236,6 +242,9 @@ useEffect(() => {
             title={it.title}
             poster={it.poster}
             kind={it.kind}
+            mediaType={it.mediaType} 
+            id={it.id}
+            itemInfo={{ release_date: it.release_date, first_air_date: it.first_air_date }}
             onClick={() => navigate(`/details/${it.mediaType}/${it.id}`)}
           />
         )}
@@ -252,6 +261,9 @@ useEffect(() => {
             title={it.title}
             poster={it.poster}
             kind={it.kind}
+            mediaType={it.mediaType} 
+            id={it.id}  
+            itemInfo={{ release_date: it.release_date, first_air_date: it.first_air_date }}
             onClick={() => navigate(`/details/${it.mediaType}/${it.id}`)}
           />
         )}
@@ -283,17 +295,30 @@ function Row({ title, items, emptyHint, renderCard }) {
   );
 }
 
-function Card({ title, poster, kind, onClick, footer }) {
+function Card({ title, poster, kind, onClick, footer, mediaType, id, itemInfo }) {
+  const [label, setLabel] = useState("");
+
+  useEffect(() => {
+    if (!mediaType || !id) return;
+    fetchPrimaryLabel(mediaType, id, itemInfo ?? {}).then(setLabel);
+  }, [mediaType, id, itemInfo?.release_date, itemInfo?.first_air_date]);
+
   return (
     <button
       onClick={onClick}
-      className="min-w-[160px] bg-white/5 border border-white/10 rounded-xl p-2 hover:bg-white/10 transition text-left"
+      className="relative min-w-[160px] bg-white/5 border border-white/10 rounded-xl p-2 hover:bg-white/10 transition text-left"
     >
-      <div className="w-full h-[200px] rounded-lg overflow-hidden bg-white/10 flex items-center justify-center">
+      <div className="relative w-full h-[200px] rounded-lg overflow-hidden bg-white/10 flex items-center justify-center">
         {poster ? (
           <img src={poster} alt={title} className="w-full h-full object-cover" />
         ) : (
           <span className="text-xs text-slate-400">No Image</span>
+        )}
+
+        {label && (
+          <div className="absolute left-2 top-2 px-2 py-1 rounded-md text-[10px] font-semibold bg-black/70 border border-white/15">
+            {label}
+          </div>
         )}
       </div>
 
@@ -304,6 +329,7 @@ function Card({ title, poster, kind, onClick, footer }) {
     </button>
   );
 }
+
 
 function Progress({ value }) {
   return (

@@ -55,6 +55,30 @@ export async function whoAmI() {
 export const tmdbImg = (path, size = "w500") =>
   path ? `https://image.tmdb.org/t/p/${size}${path}` : "";
 
+/* ---------- Region + Provider helpers ---------- */
+export const USER_REGION = (localStorage.getItem("bb.region") || "US").toUpperCase();
+
+function pickRegion(results, region = USER_REGION) {
+  // Supports both shapes:
+  // 1) { results: { US: {...} } }   (TMDB default)
+  // 2) { US: {...} }                 (some backends flatten it)
+  const root = results?.results ?? results;
+  return root?.[region] || null;
+}
+
+export function normalizeProviders(results, region = USER_REGION) {
+  const r = pickRegion(results, region);
+  if (!r) return { flatrate: [], ads: [], free: [], rent: [], buy: [], any: [] };
+
+  const flat = (r.flatrate || []).map(p => p.provider_name);
+  const ads  = (r.ads      || []).map(p => p.provider_name);
+  const free = (r.free     || []).map(p => p.provider_name);
+  const rent = (r.rent     || []).map(p => p.provider_name);
+  const buy  = (r.buy      || []).map(p => p.provider_name);
+  const any  = [...new Set([...flat, ...ads, ...free, ...rent, ...buy])];
+  return { flatrate: flat, ads, free, rent, buy, any };
+}
+
 // --- Backend media wrappers ---
 export const media = {
   movies: {
@@ -68,6 +92,10 @@ export const media = {
       api(`/api/media/movies/upcoming?page=${p}${lang ? `&language=${lang}` : ""}${region ? `&region=${region}` : ""}`),
     details: (id, lang) =>
       api(`/api/media/movies/${id}${lang ? `?language=${lang}` : ""}`),
+
+    // ✅ matches Swagger
+    providers: (id, region = USER_REGION) =>
+      api(`/api/media/movies/${id}/watch/providers?region=${region}`),
   },
   tv: {
     airingToday: (p = 1, lang, tz) =>
@@ -80,9 +108,12 @@ export const media = {
       api(`/api/media/tv/top_rated?page=${p}${lang ? `&language=${lang}` : ""}`),
     details: (id, lang) =>
       api(`/api/media/tv/${id}${lang ? `?language=${lang}` : ""}`),
+
+    // conventionally mirrors movies
+    providers: (id, region = USER_REGION) =>
+      api(`/api/media/tv/${id}/watch/providers?region=${region}`),
   },
   search: {
-    // change includeAdult -> include_adult if your backend expects snake_case
     multi: (q, page = 1, includeAdult = false, lang) =>
       api(`/api/media/search/multi?query=${encodeURIComponent(q)}&page=${page}&includeAdult=${includeAdult}${lang ? `&language=${lang}` : ""}`),
   },
