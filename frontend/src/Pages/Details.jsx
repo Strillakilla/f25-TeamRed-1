@@ -51,13 +51,13 @@ export default function Details() {
           {type === "movie" ? (
             <>
               <p><strong>Release:</strong> {item.release_date}</p>
-              <p><strong>Rating:</strong> ⭐ {item.vote_average}</p>
+              <p><strong>Rating:</strong> {item.vote_average}</p>
               <p><strong>Runtime:</strong> {item.runtime} min</p>
             </>
           ) : (
             <>
               <p><strong>First Air:</strong> {item.first_air_date}</p>
-              <p><strong>Rating:</strong> ⭐ {item.vote_average}</p>
+              <p><strong>Rating:</strong> {item.vote_average}</p>
               <p><strong>Episodes:</strong> {item.number_of_episodes}</p>
               <p><strong>Seasons:</strong> {item.number_of_seasons}</p>
               <p><strong>Status:</strong> {item.status}</p>

@@ -173,7 +173,12 @@ export default function Home() {
               title={it.title}
               poster={it.poster}
               kind={it.kind}
-              onClick={() => navigate(`/details/${it.id}`)}
+        onClick={() => {
+          const mt =
+            it.mediaType ||
+            (it.kind === "movie" ? "movie" : "tv"); // fallback for older CW entries
+          navigate(`/details/${mt}/${it.id}`);
+          }}
               footer={
                 <>
                   <Progress value={it.progress || 0} />
