@@ -39,36 +39,69 @@ export default function Home() {
   /* ----------------------------------------------
      Enrich legacy CW entries
   ---------------------------------------------- */
-  useEffect(() => {
-    async function enrich() {
-      const updated = await Promise.all(
-        continueItems.map(async (it) => {
-          if (it.poster) return it;
+useEffect(() => {
+  let cancelled = false;
 
-          try {
-            const res = await fetch(
-              `https://api.tvmaze.com/singlesearch/shows?q=${encodeURIComponent(it.title)}`
-            );
-            const data = await res.json();
+  async function migrateCW() {
+    // already migrated? bail
+    if (localStorage.getItem('bb.cw.migrated.v2') === 'true') return;
 
-            return {
+    const updated = [];
+    for (const it of continueItems) {
+      // If it already has TMDB shape, keep it
+      if (it.mediaType && typeof it.id === 'number' && it.poster) {
+        updated.push(it);
+        continue;
+      }
+
+      // Try to find a TMDB match via backend
+      try {
+        const q = (it.title || '').trim();
+        if (!q) { updated.push(it); continue; }
+
+        const res = await media.search.multi(q, 1, false);
+        const hit = (res?.results || []).find(r =>
+          r.media_type === 'movie' || r.media_type === 'tv'
+        );
+
+        if (!hit) { updated.push(it); continue; }
+
+        const normalized = hit.media_type === 'movie'
+          ? {
               ...it,
-              id: data.id,
-              poster: data.image?.medium || data.image?.original || ""
+              id: hit.id,                 // TMDB id
+              mediaType: 'movie',
+              kind: 'movie',
+              title: hit.title || hit.original_title || it.title,
+              poster: tmdbImg(hit.poster_path),
+              year: (hit.release_date || '').slice(0, 4),
+            }
+          : {
+              ...it,
+              id: hit.id,                 // TMDB id
+              mediaType: 'tv',
+              kind: 'show',
+              title: hit.name || hit.original_name || it.title,
+              poster: tmdbImg(hit.poster_path),
+              year: (hit.first_air_date || '').slice(0, 4),
             };
-          } catch {
-            return it;
-          }
-        })
-      );
 
-      setContinueItems(updated);
-      localStorage.setItem(CW_KEY, JSON.stringify(updated));
+        updated.push(normalized);
+      } catch {
+        updated.push(it);
+      }
     }
 
-    enrich();
-  }, []);
+    if (!cancelled) {
+      setContinueItems(updated);
+      localStorage.setItem(CW_KEY, JSON.stringify(updated));
+      localStorage.setItem('bb.cw.migrated.v2', 'true');
+    }
+  }
 
+  migrateCW();
+  return () => { cancelled = true; };
+}, []);
   /* ----------------------------------------------
      Sort CW
   ---------------------------------------------- */
