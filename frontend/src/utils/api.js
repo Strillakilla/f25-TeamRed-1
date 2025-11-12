@@ -1,6 +1,7 @@
 // src/utils/api.js
 export const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8080";
 
+// --- auth token helpers ---
 function getToken() { return localStorage.getItem("bb.jwt") || ""; }
 function clearToken() { localStorage.removeItem("bb.jwt"); }
 
@@ -10,6 +11,7 @@ function isAuthPath(path) {
   return p.startsWith("/api/auth/");
 }
 
+// --- generic JSON fetcher that adds Bearer token when needed ---
 export async function api(path, options = {}) {
   const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
 
@@ -23,13 +25,10 @@ export async function api(path, options = {}) {
 
   const res = await fetch(API_BASE + path, init);
 
-  // Handle expired/invalid tokens gracefully
-  if (res.status === 401 || res.status === 403) {
-    if (!isAuthPath(path)) {
-      clearToken();
-      // broadcast so the app can react (e.g., show login)
-      window.dispatchEvent(new Event("auth:expired"));
-    }
+  // Notify app on auth errors
+  if ((res.status === 401 || res.status === 403) && !isAuthPath(path)) {
+    clearToken();
+    window.dispatchEvent(new Event("auth:expired"));
   }
 
   if (!res.ok) {
@@ -40,3 +39,51 @@ export async function api(path, options = {}) {
   const ct = res.headers.get("content-type") || "";
   return ct.includes("application/json") ? res.json() : res.text();
 }
+
+// --- auth convenience wrappers (these are what Login.jsx imports) ---
+export async function loginAuth(email, password) {
+  return api("/api/auth/login", { method: "POST", body: { email, password } });
+}
+export async function registerAuth({ username, email, password }) {
+  return api("/api/auth/register", { method: "POST", body: { username, email, password } });
+}
+export async function whoAmI() {
+  return api("/api/auth/me");
+}
+
+// --- TMDB image helper via CDN ---
+export const tmdbImg = (path, size = "w500") =>
+  path ? `https://image.tmdb.org/t/p/${size}${path}` : "";
+
+// --- Backend media wrappers ---
+export const media = {
+  movies: {
+    nowPlaying: (p = 1, lang, region) =>
+      api(`/api/media/movies/now_playing?page=${p}${lang ? `&language=${lang}` : ""}${region ? `&region=${region}` : ""}`),
+    popular: (p = 1, lang, region) =>
+      api(`/api/media/movies/popular?page=${p}${lang ? `&language=${lang}` : ""}${region ? `&region=${region}` : ""}`),
+    topRated: (p = 1, lang, region) =>
+      api(`/api/media/movies/top_rated?page=${p}${lang ? `&language=${lang}` : ""}${region ? `&region=${region}` : ""}`),
+    upcoming: (p = 1, lang, region) =>
+      api(`/api/media/movies/upcoming?page=${p}${lang ? `&language=${lang}` : ""}${region ? `&region=${region}` : ""}`),
+    details: (id, lang) =>
+      api(`/api/media/movies/${id}${lang ? `?language=${lang}` : ""}`),
+  },
+  tv: {
+    airingToday: (p = 1, lang, tz) =>
+      api(`/api/media/tv/airing_today?page=${p}${lang ? `&language=${lang}` : ""}${tz ? `&timezone=${encodeURIComponent(tz)}` : ""}`),
+    onTheAir: (p = 1, lang, tz) =>
+      api(`/api/media/tv/on_the_air?page=${p}${lang ? `&language=${lang}` : ""}${tz ? `&timezone=${encodeURIComponent(tz)}` : ""}`),
+    popular: (p = 1, lang) =>
+      api(`/api/media/tv/popular?page=${p}${lang ? `&language=${lang}` : ""}`),
+    topRated: (p = 1, lang) =>
+      api(`/api/media/tv/top_rated?page=${p}${lang ? `&language=${lang}` : ""}`),
+    details: (id, lang) =>
+      api(`/api/media/tv/${id}${lang ? `?language=${lang}` : ""}`),
+  },
+  search: {
+    // change includeAdult -> include_adult if your backend expects snake_case
+    multi: (q, page = 1, includeAdult = false, lang) =>
+      api(`/api/media/search/multi?query=${encodeURIComponent(q)}&page=${page}&includeAdult=${includeAdult}${lang ? `&language=${lang}` : ""}`),
+  },
+};
