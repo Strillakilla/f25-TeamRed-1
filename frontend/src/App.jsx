@@ -1,6 +1,12 @@
 // src/App.jsx
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
+import { useEffect } from "react";
+
 import Navbar from "./components/Navbar.jsx";
+import AdRails from "./components/AdRails.jsx";
+import Footer from "./components/Footer.jsx";
+import ChatbotWidget from "./components/ChatbotWidget.jsx";
+
 import GetStarted from "./Pages/Get-StartedPage.jsx";
 import Home from "./Pages/Home.jsx";
 import AccountCreation from "./Pages/AccountChoice.jsx";
@@ -11,13 +17,12 @@ import Watchlist from "./Pages/Watchlist.jsx";
 import MoviesShows from "./Pages/MoviesShows.jsx";
 import Account from "./Pages/Account.jsx";
 import ForgotPassword from "./Pages/ForgotPassword.jsx";
-import Footer from "./components/Footer.jsx";
 import Security from "./Pages/Security.jsx";
-import ChatbotWidget from "./components/ChatbotWidget.jsx";
 import Details from "./Pages/Details.jsx";
+
+import AppLayout from "./layout/AppLayout";
 import { RequireAuth, RequireAnon } from "./route-guards";
 import { isAuthed, onAuthExpired } from "./utils/auth";
-import { useEffect } from "react";
 
 export default function App() {
   const { pathname } = useLocation();
@@ -36,8 +41,9 @@ export default function App() {
     <div className="min-h-screen bg-gradient-to-br from-black via-[#1A093A] to-[#2D0F4E] text-slate-100">
       {showNavbar && <Navbar />}
 
-      <main className="max-w-6xl mx-auto px-6 py-6">
-        <Routes>
+      {/* Wrap ALL routes in AppLayout so ad rails show around pages */}
+      <Routes>
+        <Route element={<AppLayout />}>
           {/* default landing */}
           <Route
             path="/"
@@ -69,8 +75,8 @@ export default function App() {
             path="*"
             element={<Navigate to={isAuthed() ? "/home" : "/get-started"} replace />}
           />
-        </Routes>
-      </main>
+        </Route>
+      </Routes>
 
       {pathname !== "/get-started" && <ChatbotWidget />}
       <Footer />
