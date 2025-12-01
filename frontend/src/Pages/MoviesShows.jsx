@@ -14,6 +14,27 @@ const TYPE_LABELS = {
   "Game Show": "Game Show",
 };
 
+const GENRE_LABELS = {
+  "28": "Action",
+  "12": "Adventure",
+  "16": "Animation",
+  "35": "Comedy",
+  "80": "Crime",
+  "99": "Documentary",
+  "18": "Drama",
+  "10751": "Family",
+  "14": "Fantasy",
+  "36": "History",
+  "27": "Horror",
+  "10402": "Music",
+  "9648": "Mystery",
+  "10749": "Romance",
+  "878": "Science Fiction",
+  "10770": "TV Movie",
+  "53": "Thriller",
+  "10752": "War",
+  "37": "Western",
+};
 
 // Reusable multi-select "dropdown" with checkmarks
 function MultiSelectDropdown({ placeholder, options, selected, onChange }) {
@@ -182,7 +203,7 @@ async function loadDefaultShows() {
         year: (m.release_date || "").slice(0, 4),
         type: "Movie",
         typeLabel: "Movie",
-        genres: (m.genre_ids || []),          // genre names require a map; keep IDs or leave empty
+       genres: (m.genre_ids || []).map(String),
         rating: m.vote_average ?? null,
         runtime: null,                         // TMDB list payload doesn’t include runtime
         language: m.original_language?.toUpperCase(),
@@ -197,7 +218,7 @@ async function loadDefaultShows() {
         year: (t.first_air_date || "").slice(0, 4),
         type: "Scripted",
         typeLabel: "TV Show",
-        genres: (t.genre_ids || []),
+       genres: (t.genre_ids || []).map(String),
         rating: t.vote_average ?? null,
         runtime: t.episode_run_time?.[0] ?? null,
         language: t.original_language?.toUpperCase(),
@@ -231,7 +252,7 @@ async function search(term) {
             poster: tmdbImg(x.poster_path),
             year: (x.release_date || "").slice(0, 4),
             type: "Movie",
-            genres: (x.genre_ids || []),
+           genres: (x.genre_ids || []).map(String),
             rating: x.vote_average ?? null,
             runtime: null,
             language: x.original_language?.toUpperCase(),
@@ -247,7 +268,7 @@ async function search(term) {
           poster: tmdbImg(x.poster_path),
           year: (x.first_air_date || "").slice(0, 4),
           type: "Scripted",
-          genres: (x.genre_ids || []),
+          genres: (x.genre_ids || []).map(String),
           rating: x.vote_average ?? null,
           runtime: x.episode_run_time?.[0] ?? null,
           language: x.original_language?.toUpperCase(),
@@ -394,8 +415,12 @@ async function search(term) {
   //build dynamic dropdown options from current results
   const typeOptions = Array.from(new Set(results.map(r => r.type))).sort();
   const genreOptions = Array.from(
-    new Set(results.flatMap(r => r.genres || []))
-  ).sort();
+  new Set(results.flatMap(r => r.genres || []))
+).sort((a, b) => {
+  const la = GENRE_LABELS[a] || a;
+  const lb = GENRE_LABELS[b] || b;
+  return la.localeCompare(lb);
+});
   const languageOptions = Array.from(
   new Set(results.map(r => r.language).filter(Boolean))
 ).sort();
@@ -606,9 +631,9 @@ const quickStatusValue =
         >
           <option value="all">All genres</option>
           {genreOptions.map((g) => (
-            <option key={g} value={g}>
-              {g}
-            </option>
+          <option key={g} value={g}>
+          {GENRE_LABELS[g] || g}
+          </option>
           ))}
           {quickGenreValue === "custom" && (
             <option value="custom">(custom)</option>
@@ -764,7 +789,7 @@ const quickStatusValue =
    <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-3">
   {/* Grid of filter cards */}
   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-    {/* TYPE */}
+   {/* TYPE */}
 <div className="bg-slate-900/40 rounded-lg border border-white/10 p-3 space-y-2">
   <div className="flex items-center justify-between">
     <span className="text-xs font-semibold text-slate-100">Type</span>
@@ -808,7 +833,7 @@ const quickStatusValue =
   </div>
 </div>
 
-    {/* GENRES */}
+{/* GENRES */}
 <div className="bg-slate-900/40 rounded-lg border border-white/10 p-3 space-y-2">
   <div className="flex items-center justify-between">
     <span className="text-xs font-semibold text-slate-100">Genres</span>
@@ -827,7 +852,10 @@ const quickStatusValue =
       </span>
       <MultiSelectDropdown
         placeholder="All genres"
-        options={genreOptions.map((g) => ({ value: g, label: g }))}
+        options={genreOptions.map((g) => ({
+          value: g,
+          label: GENRE_LABELS[g] || g,
+        }))}
         selected={includeGenres}
         onChange={setIncludeGenres}
       />
@@ -838,7 +866,10 @@ const quickStatusValue =
       </span>
       <MultiSelectDropdown
         placeholder="None excluded"
-        options={genreOptions.map((g) => ({ value: g, label: g }))}
+        options={genreOptions.map((g) => ({
+          value: g,
+          label: GENRE_LABELS[g] || g,
+        }))}
         selected={excludeGenres}
         onChange={setExcludeGenres}
       />
