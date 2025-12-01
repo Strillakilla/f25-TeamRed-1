@@ -42,6 +42,20 @@ const GENRE_LABELS = {
   "10765": "Sci-Fi & Fantasy",
 };
 
+const LANGUAGE_LABELS = {
+  EN: "English",
+  FR: "French",
+  ES: "Spanish",
+  DE: "German",
+  IT: "Italian",
+  JA: "Japanese",
+  KO: "Korean",
+  ZH: "Chinese",
+  HI: "Hindi",
+  PT: "Portuguese",
+  RU: "Russian",
+};
+
 // Region to use for provider calls (pick what your backend expects)
 const PROVIDER_REGION = "US";
 
@@ -507,8 +521,12 @@ export default function MoviesShows() {
   });
 
   const languageOptions = Array.from(
-    new Set(results.map((r) => r.language).filter(Boolean))
-  ).sort();
+  new Set(results.map((r) => r.language).filter(Boolean))
+).sort((a, b) => {
+  const la = LANGUAGE_LABELS[a] || a;
+  const lb = LANGUAGE_LABELS[b] || b;
+  return la.localeCompare(lb);
+});
 
   const statusOptions = Array.from(
     new Set(results.map((r) => r.status).filter(Boolean))
@@ -779,11 +797,11 @@ export default function MoviesShows() {
                 }}
               >
                 <option value="all">All languages</option>
-                {languageOptions.map((l) => (
-                  <option key={l} value={l}>
-                    {l}
-                  </option>
-                ))}
+                  {languageOptions.map((code) => (
+    <option key={code} value={code}>
+      {LANGUAGE_LABELS[code] || code}
+    </option>
+  ))}
                 {quickLanguageValue === "custom" && (
                   <option value="custom">(custom)</option>
                 )}
@@ -1043,28 +1061,28 @@ export default function MoviesShows() {
                       Include
                     </span>
                     <MultiSelectDropdown
-                      placeholder="All languages"
-                      options={languageOptions.map((l) => ({
-                        value: l,
-                        label: l,
-                      }))}
-                      selected={includeLanguages}
-                      onChange={setIncludeLanguages}
-                    />
+                    placeholder="All languages"
+                    options={languageOptions.map((code) => ({
+                      value: code,
+                      label: LANGUAGE_LABELS[code] || code,
+                    }))}
+                    selected={includeLanguages}
+                    onChange={setIncludeLanguages}
+                  />
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] uppercase text-slate-400 w-14">
                       Exclude
                     </span>
                     <MultiSelectDropdown
-                      placeholder="None excluded"
-                      options={languageOptions.map((l) => ({
-                        value: l,
-                        label: l,
-                      }))}
-                      selected={excludeLanguages}
-                      onChange={setExcludeLanguages}
-                    />
+                    placeholder="None excluded"
+                    options={languageOptions.map((code) => ({
+                      value: code,
+                      label: LANGUAGE_LABELS[code] || code,
+                    }))}
+                    selected={excludeLanguages}
+                    onChange={setExcludeLanguages}
+                  />
                   </div>
                 </div>
               </div>
