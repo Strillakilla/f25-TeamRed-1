@@ -619,14 +619,10 @@ export default function MoviesShows() {
   ---------------------------------------------------------- */
   return (
     <div className="space-y-6">
-      <header className="flex items-center justify-between gap-3">
-        <h1 className="text-3xl font-bold">Browse Movies &amp; Shows</h1>
-        {msg && (
-          <span className="text-sm px-3 py-1 rounded-full bg-white/10 text-white">
-            {msg}
-          </span>
-        )}
-      </header>
+<header className="flex items-center justify-between gap-3">
+  <h1 className="text-3xl font-bold">Browse Movies &amp; Shows</h1>
+</header>
+
 
       {/* Search bar */}
       <div className="flex gap-2">
@@ -1356,6 +1352,16 @@ export default function MoviesShows() {
           Try searching for a title to see results.
         </div>
       )}
+
+            {/* Floating toast popup */}
+      {msg && (
+        <div className="fixed bottom-4 right-4 z-50">
+          <div className="rounded-lg bg-slate-900/95 text-white px-4 py-2 shadow-lg border border-white/15 text-sm">
+            {msg}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
