@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { media, tmdbImg } from "../utils/api.js";
+import { fetchPrimaryLabel } from "../utils/watchLabel";
 
 // Same storage key as Watchlist.jsx so they share data
 const STORAGE_KEY = "watchlist.v1";
@@ -69,6 +71,31 @@ function MultiSelectDropdown({ placeholder, options, selected, onChange }) {
     </div>
   );
 }
+
+function PosterWithRibbon({ poster, mediaType, id, item }) {
+  const [label, setLabel] = useState("");
+
+  useEffect(() => {
+    if (!mediaType || !id) return;
+    fetchPrimaryLabel(mediaType, id, item ?? {}).then(setLabel);
+  }, [mediaType, id, item?.release_date, item?.first_air_date]);
+
+  return (
+    <div className="relative w-20 h-28">
+      {poster ? (
+        <img src={poster} alt="" className="w-full h-full object-cover rounded" loading="lazy" />
+      ) : (
+        <div className="w-full h-full bg-white/10 rounded" />
+      )}
+      {label && (
+        <div className="absolute left-1 top-1 px-1.5 py-0.5 text-[10px] rounded bg-black/70 border border-white/15 font-semibold">
+          {label}
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 export default function MoviesShows() {
   const navigate = useNavigate();
@@ -142,69 +169,102 @@ useEffect(() => {
 async function loadDefaultShows() {
   setBusy(true);
   try {
-    const res = await fetch("https://api.tvmaze.com/shows?page=0");
-    const data = await res.json();
-
-    const normalized = (data || []).map(show => ({
-      id: show.id,
-      title: show.name,
-      poster: show.image?.medium || show.image?.original || "",
-      year: show.premiered?.slice(0, 4) || "",
-      type: show.type || "Show",
-      typeLabel: TYPE_LABELS[show.type] || show.type,
-      genres: show.genres || [],
-      rating: show.rating?.average ?? null,
-      runtime: show.runtime ?? show.averageRuntime ?? null,
-      language: show.language || "",
-      status: show.status || "",
-      service: show.network?.name || show.webChannel?.name || "",
-    }));
-
+    const [mpop, tvpop] = await Promise.all([
+      media.movies.popular(1),
+      media.tv.popular(1),
+    ]);
+    const normalized = [
+      ...(mpop?.results || []).map(m => ({
+        id: m.id,
+        mediaType: "movie",
+        title: m.title || m.original_title,
+        poster: tmdbImg(m.poster_path),
+        year: (m.release_date || "").slice(0, 4),
+        type: "Movie",
+        typeLabel: "Movie",
+        genres: (m.genre_ids || []),          // genre names require a map; keep IDs or leave empty
+        rating: m.vote_average ?? null,
+        runtime: null,                         // TMDB list payload doesn’t include runtime
+        language: m.original_language?.toUpperCase(),
+        status: "",                            // not provided in list
+        service: "",                           // not in TMDB data
+      })),
+      ...(tvpop?.results || []).map(t => ({
+        id: t.id,
+        mediaType: "tv",
+        title: t.name || t.original_name,
+        poster: tmdbImg(t.poster_path),
+        year: (t.first_air_date || "").slice(0, 4),
+        type: "Scripted",
+        typeLabel: "TV Show",
+        genres: (t.genre_ids || []),
+        rating: t.vote_average ?? null,
+        runtime: t.episode_run_time?.[0] ?? null,
+        language: t.original_language?.toUpperCase(),
+        status: "", // list doesn’t include
+        service: "",
+      })),
+    ];
     setResults(normalized);
   } catch (err) {
     console.error(err);
-    toast("Could not load default shows");
+    toast("Could not load default titles");
   } finally {
     setBusy(false);
   }
 }
 
-  async function search(term) {
-    const s = term.trim();
-    if (!s) { setResults([]); return; }
-    setBusy(true);
-    try {
-      const res = await fetch(`https://api.tvmaze.com/search/shows?q=${encodeURIComponent(s)}`);
-      const data = await res.json();
-     const normalized = (data || []).map((x) => {
-  const show = x.show;
-
-  return {
-    id: show.id,
-    title: show.name,
-    poster: show.image?.medium || show.image?.original || "",
-    year: show.premiered?.slice(0, 4) || "",
-    type: show.type || "Show",
-
-    // existing filters
-    genres: show.genres || [],
-    rating: show.rating?.average ?? null,
-
-    // NEW fields for filters
-    runtime: show.runtime ?? show.averageRuntime ?? null,          // length in minutes
-    language: show.language || "",                                 // e.g. "English"
-    status: show.status || "",                                     // e.g. "Running", "Ended"
-    service: show.network?.name || show.webChannel?.name || "",    // network / streaming
-  };
-});
-      setResults(normalized);
-    } catch {
-      setResults([]);
-      toast("Could not fetch results");
-    } finally {
-      setBusy(false);
-    }
+async function search(term) {
+  const s = term.trim();
+  if (!s) { setResults([]); return; }
+  setBusy(true);
+  try {
+    const data = await media.search.multi(s, 1, false);
+    const normalized = (data?.results || [])
+      .filter(x => x.media_type === "movie" || x.media_type === "tv")
+      .map((x) => {
+        if (x.media_type === "movie") {
+          return {
+            id: x.id,
+            mediaType: "movie",
+            title: x.title || x.original_title,
+            poster: tmdbImg(x.poster_path),
+            year: (x.release_date || "").slice(0, 4),
+            type: "Movie",
+            genres: (x.genre_ids || []),
+            rating: x.vote_average ?? null,
+            runtime: null,
+            language: x.original_language?.toUpperCase(),
+            status: "",
+            service: "",
+          };
+        }
+        // tv
+        return {
+          id: x.id,
+          mediaType: "tv",
+          title: x.name || x.original_name,
+          poster: tmdbImg(x.poster_path),
+          year: (x.first_air_date || "").slice(0, 4),
+          type: "Scripted",
+          genres: (x.genre_ids || []),
+          rating: x.vote_average ?? null,
+          runtime: x.episode_run_time?.[0] ?? null,
+          language: x.original_language?.toUpperCase(),
+          status: "",
+          service: "",
+        };
+      });
+    setResults(normalized);
+  } catch (e) {
+    console.error(e);
+    setResults([]);
+    toast("Could not fetch results");
+  } finally {
+    setBusy(false);
   }
+}
+
 
   function toast(text) {
     setMsg(text);
@@ -996,30 +1056,24 @@ const quickStatusValue =
     <article
       key={r.id}
       className="bg-white/5 border border-white/10 rounded-lg overflow-hidden hover:bg-white/10 transition cursor-pointer"
-      onClick={() => navigate(`/details/${r.id}`, { state: { show: r } })}
+      onClick={() => navigate(`/details/${r.mediaType}/${r.id}`, { state: { show: r } })}
     >
-      <div className="flex gap-3 p-3">
-        {r.poster ? (
-          <img
-            src={r.poster}
-            alt=""
-            className="w-20 h-28 object-cover rounded"
-            loading="lazy"
-          />
-        ) : (
-          <div className="w-20 h-28 bg-white/10 rounded" />
-        )}
-        <div className="flex-1">
-          <h3 className="font-semibold text-white">{r.title}</h3>
-          <p className="text-xs text-slate-300">
-            {TYPE_LABELS[r.type] || r.type}
-            {r.year && ` • ${r.year}`}
-            {r.rating != null && ` • ⭐ ${r.rating}`}
-            {r.runtime != null && ` • ${r.runtime} min`}
-            {r.language && ` • ${r.language}`}
-            {r.service && ` • ${r.service}`}
-          </p>
-
+<div className="flex gap-3 p-3">
+  <PosterWithRibbon
+    poster={r.poster}
+    mediaType={r.mediaType}
+    id={r.id}
+    item={{ release_date: r.release_date, first_air_date: r.first_air_date }}
+  />
+  <div className="flex-1">
+    <h3 className="font-semibold text-white">{r.title}</h3>
+    <p className="text-xs text-slate-300">
+      {(TYPE_LABELS[r.type] || r.type)}
+      {r.year && ` • ${r.year}`}
+      {r.rating != null && ` • ⭐ ${r.rating}`}
+      {r.runtime != null && ` • ${r.runtime} min`}
+      {r.language && ` • ${r.language}`}
+    </p>
           <button
             className="mt-3 px-3 py-1 text-sm rounded-md bg-teal-500 text-white hover:bg-teal-400"
             onClick={(e) => {
@@ -1060,3 +1114,4 @@ const quickStatusValue =
 </div>
 );
 }
+

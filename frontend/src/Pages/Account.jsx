@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, Link, NavLink } from "react-router-dom";
+import { isAuthed } from "../utils/auth";
 
 const USER_EMAIL_KEY = "bb.user.email";
 const USER_NAME_KEY  = "bb.user.name";
@@ -10,10 +11,9 @@ export default function Account() {
 
   // “Auth” check — if no email saved, send user to login
   const email = useMemo(() => localStorage.getItem(USER_EMAIL_KEY) || "", []);
-  useEffect(() => {
-    if (!email) navigate("/login");
-  }, [email, navigate]);
-
+useEffect(() => {
+  if (!isAuthed()) navigate("/get-started", { replace: true });
+}, [navigate]);
   const [name, setName] = useState(localStorage.getItem(USER_NAME_KEY) || "");
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState("");
@@ -43,10 +43,10 @@ export default function Account() {
   }
 
   function signOut() {
-    // Keep watchlist, but clear auth
+    localStorage.removeItem("bb.jwt");          
     localStorage.removeItem(USER_EMAIL_KEY);
-    // optionally: localStorage.removeItem(USER_NAME_KEY);
-    navigate("/login");
+    localStorage.removeItem(USER_NAME_KEY);  
+    navigate("/login", { replace: true }); 
   }
 
   return (
