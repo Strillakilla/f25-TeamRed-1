@@ -38,8 +38,9 @@ const GENRE_LABELS = {
   "53": "Thriller",
   "10752": "War",
   "37": "Western",
-  "10759": "Action & Adventure", // TV genres that were showing as numbers
+  "10759": "Action & Adventure",
   "10765": "Sci-Fi & Fantasy",
+  "10766": "Soap",
 };
 
 const LANGUAGE_LABELS = {
@@ -56,7 +57,16 @@ const LANGUAGE_LABELS = {
   RU: "Russian",
 };
 
-// Region to use for provider calls (pick what your backend expects)
+const STATUS_LABELS = {
+  "Returning Series": "Currently Airing",
+  Ended: "Ended",
+  Canceled: "Canceled",
+  "In Production": "In production",
+  Planned: "Planned",
+  Pilot: "Pilot",
+  Released: "Released",
+};
+
 const PROVIDER_REGION = "US";
 
 /* ----------------------------------------------------------
@@ -117,7 +127,7 @@ function MultiSelectDropdown({ placeholder, options, selected, onChange }) {
 }
 
 /* ----------------------------------------------------------
-   Poster with "On Watchlist" / "Watching" ribbon
+   Poster with ribbon
 ---------------------------------------------------------- */
 function PosterWithRibbon({ poster, mediaType, id, item }) {
   const [label, setLabel] = useState("");
@@ -151,8 +161,6 @@ function PosterWithRibbon({ poster, mediaType, id, item }) {
 /* ----------------------------------------------------------
    Helper: fetch streaming services for one title
 ---------------------------------------------------------- */
-// TMDB watch/providers come back grouped by region.
-// This helper pulls out all provider *names* for a given region.
 async function fetchWatchProviders(mediaType, tmdbId) {
   try {
     const raw =
@@ -160,9 +168,7 @@ async function fetchWatchProviders(mediaType, tmdbId) {
         ? await media.movies.providers(tmdbId, PROVIDER_REGION)
         : await media.tv.providers(tmdbId, PROVIDER_REGION);
 
-    // TMDB-style shape: raw.results[REGION].flatrate / free / ads / rent / buy
     const regionBlock = raw?.results?.[PROVIDER_REGION] || {};
-
     const GROUPS = ["flatrate", "free", "ads", "rent", "buy"];
 
     const allNames = GROUPS.flatMap((g) =>
@@ -171,7 +177,6 @@ async function fetchWatchProviders(mediaType, tmdbId) {
       )
     );
 
-    // Unique list of provider names (e.g. ["Netflix", "Disney+", ...])
     return Array.from(new Set(allNames));
   } catch (err) {
     console.error("fetchWatchProviders error:", err);
@@ -189,6 +194,7 @@ export default function MoviesShows() {
   const [results, setResults] = useState([]);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
+  const [safeOnly, setSafeOnly] = useState(false); // default: show all
 
   const PAGE_SIZE = 24;
   const [itemsToShow, setItemsToShow] = useState(PAGE_SIZE);
@@ -218,10 +224,31 @@ export default function MoviesShows() {
   const [excludeServices, setExcludeServices] = useState([]);
 
   /* ----------------------------
+     helper to attach TV status
+  ---------------------------- */
+  async function attachTvStatus(items) {
+    const tvItems = items.filter((i) => i.mediaType === "tv");
+    const otherItems = items.filter((i) => i.mediaType !== "tv");
+
+    const tvWithStatus = await Promise.all(
+      tvItems.map(async (tv) => {
+        try {
+          const details = await media.tv.details(tv.id);
+          return { ...tv, status: details.status || "" };
+        } catch (e) {
+          console.error("Could not load TV status for", tv.id, e);
+          return tv;
+        }
+      })
+    );
+
+    return [...otherItems, ...tvWithStatus];
+  }
+
+  /* ----------------------------
      1) Search / default loading
   ---------------------------- */
   useEffect(() => {
-    // when q has text -> debounced search
     if (q.trim()) {
       const id = setTimeout(() => {
         search(q);
@@ -231,9 +258,10 @@ export default function MoviesShows() {
 
     // when q is empty -> load default popular titles
     loadDefaultShows();
-  }, [q]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q, safeOnly]); // safeOnly also refetches
 
-  /* Reset how many cards we show whenever filters or q change */
+  // Reset how many cards we show whenever filters / query change
   useEffect(() => {
     setItemsToShow(PAGE_SIZE);
   }, [
@@ -254,6 +282,7 @@ export default function MoviesShows() {
     minRuntime,
     maxRuntime,
     sortBy,
+    safeOnly,
   ]);
 
   /* ----------------------------
@@ -284,6 +313,7 @@ export default function MoviesShows() {
           status: "",
           service: services, // array of provider names
           release_date: m.release_date,
+          adult: !!m.adult,
         };
       });
 
@@ -304,13 +334,19 @@ export default function MoviesShows() {
           status: "",
           service: services, // array of provider names
           first_air_date: t.first_air_date,
+          adult: !!t.adult,
         };
       });
 
       const normalizedMovies = await Promise.all(moviePromises);
       const normalizedTv = await Promise.all(tvPromises);
 
-      setResults([...normalizedMovies, ...normalizedTv]);
+      const withStatus = await attachTvStatus([
+        ...normalizedMovies,
+        ...normalizedTv,
+      ]);
+
+      setResults(withStatus);
     } catch (err) {
       console.error(err);
       toast("Could not load default titles");
@@ -355,6 +391,7 @@ export default function MoviesShows() {
               status: "",
               service: services,
               release_date: x.release_date,
+              adult: !!x.adult,
             };
           }
 
@@ -374,11 +411,13 @@ export default function MoviesShows() {
             status: "",
             service: services,
             first_air_date: x.first_air_date,
+            adult: !!x.adult,
           };
         })
       );
 
-      setResults(mapped);
+      const withStatus = await attachTvStatus(mapped);
+      setResults(withStatus);
     } catch (e) {
       console.error(e);
       setResults([]);
@@ -428,6 +467,9 @@ export default function MoviesShows() {
      FRONT-END FILTERING
   ---------------------------- */
   const filteredResults = results.filter((r) => {
+    // SAFE ONLY: hide adult titles when toggle is ON
+    if (safeOnly && r.adult) return false;
+
     // TYPE
     if (includeTypes.length > 0 && !includeTypes.includes(r.type)) return false;
     if (excludeTypes.length > 0 && excludeTypes.includes(r.type)) return false;
@@ -521,12 +563,12 @@ export default function MoviesShows() {
   });
 
   const languageOptions = Array.from(
-  new Set(results.map((r) => r.language).filter(Boolean))
-).sort((a, b) => {
-  const la = LANGUAGE_LABELS[a] || a;
-  const lb = LANGUAGE_LABELS[b] || b;
-  return la.localeCompare(lb);
-});
+    new Set(results.map((r) => r.language).filter(Boolean))
+  ).sort((a, b) => {
+    const la = LANGUAGE_LABELS[a] || a;
+    const lb = LANGUAGE_LABELS[b] || b;
+    return la.localeCompare(lb);
+  });
 
   const statusOptions = Array.from(
     new Set(results.map((r) => r.status).filter(Boolean))
@@ -606,12 +648,14 @@ export default function MoviesShows() {
 
       {/* Filters panel */}
       <div className="mt-4 space-y-4 text-sm">
-        {/* Header row with Quick/Advanced toggle */}
+        {/* Header row with Quick/Advanced toggle + Safe toggle */}
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <h2 className="text-sm font-semibold text-slate-100">
               Filter results
             </h2>
+
+            {/* Quick / Advanced switch */}
             <div className="flex items-center text-[11px] bg-slate-900/60 rounded-full border border-white/10 overflow-hidden">
               <button
                 type="button"
@@ -636,6 +680,33 @@ export default function MoviesShows() {
                 Advanced
               </button>
             </div>
+
+           {/* Safe mode toggle */}
+<label className="flex items-center gap-3 ml-3">
+  <div className="flex flex-col leading-tight">
+    <span className="text-[11px] font-semibold text-slate-100">
+      Safe mode
+    </span>
+    <span className="text-[10px] text-slate-400">
+      {safeOnly ? "Family-friendly only" : "All titles"}
+    </span>
+  </div>
+
+  <button
+    type="button"
+    onClick={() => setSafeOnly((prev) => !prev)}
+    className={`relative inline-flex h-5 w-9 items-center rounded-full border transition-colors
+      ${safeOnly ? "bg-teal-500 border-teal-300" : "bg-slate-800 border-slate-500"}
+    `}
+  >
+    <span
+      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform
+        ${safeOnly ? "translate-x-4" : "translate-x-0"}
+      `}
+    />
+  </button>
+</label>
+
           </div>
 
           {/* Clear all filters */}
@@ -797,11 +868,11 @@ export default function MoviesShows() {
                 }}
               >
                 <option value="all">All languages</option>
-                  {languageOptions.map((code) => (
-    <option key={code} value={code}>
-      {LANGUAGE_LABELS[code] || code}
-    </option>
-  ))}
+                {languageOptions.map((code) => (
+                  <option key={code} value={code}>
+                    {LANGUAGE_LABELS[code] || code}
+                  </option>
+                ))}
                 {quickLanguageValue === "custom" && (
                   <option value="custom">(custom)</option>
                 )}
@@ -830,7 +901,7 @@ export default function MoviesShows() {
                 <option value="all">All statuses</option>
                 {statusOptions.map((s) => (
                   <option key={s} value={s}>
-                    {s}
+                    {STATUS_LABELS[s] || s}
                   </option>
                 ))}
                 {quickStatusValue === "custom" && (
@@ -999,7 +1070,9 @@ export default function MoviesShows() {
                       {includeServices.length && excludeServices.length
                         ? " · "
                         : ""}
-                      {excludeServices.length ? `-${excludeServices.length}` : ""}
+                      {excludeServices.length
+                        ? `-${excludeServices.length}`
+                        : ""}
                     </span>
                   )}
                 </div>
@@ -1061,28 +1134,28 @@ export default function MoviesShows() {
                       Include
                     </span>
                     <MultiSelectDropdown
-                    placeholder="All languages"
-                    options={languageOptions.map((code) => ({
-                      value: code,
-                      label: LANGUAGE_LABELS[code] || code,
-                    }))}
-                    selected={includeLanguages}
-                    onChange={setIncludeLanguages}
-                  />
+                      placeholder="All languages"
+                      options={languageOptions.map((code) => ({
+                        value: code,
+                        label: LANGUAGE_LABELS[code] || code,
+                      }))}
+                      selected={includeLanguages}
+                      onChange={setIncludeLanguages}
+                    />
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] uppercase text-slate-400 w-14">
                       Exclude
                     </span>
                     <MultiSelectDropdown
-                    placeholder="None excluded"
-                    options={languageOptions.map((code) => ({
-                      value: code,
-                      label: LANGUAGE_LABELS[code] || code,
-                    }))}
-                    selected={excludeLanguages}
-                    onChange={setExcludeLanguages}
-                  />
+                      placeholder="None excluded"
+                      options={languageOptions.map((code) => ({
+                        value: code,
+                        label: LANGUAGE_LABELS[code] || code,
+                      }))}
+                      selected={excludeLanguages}
+                      onChange={setExcludeLanguages}
+                    />
                   </div>
                 </div>
               </div>
@@ -1116,7 +1189,7 @@ export default function MoviesShows() {
                       placeholder="All statuses"
                       options={statusOptions.map((s) => ({
                         value: s,
-                        label: s,
+                        label: STATUS_LABELS[s] || s,
                       }))}
                       selected={includeStatuses}
                       onChange={setIncludeStatuses}
@@ -1130,7 +1203,7 @@ export default function MoviesShows() {
                       placeholder="None excluded"
                       options={statusOptions.map((s) => ({
                         value: s,
-                        label: s,
+                        label: STATUS_LABELS[s] || s,
                       }))}
                       selected={excludeStatuses}
                       onChange={setExcludeStatuses}
