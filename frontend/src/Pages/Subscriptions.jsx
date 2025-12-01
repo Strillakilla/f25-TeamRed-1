@@ -219,7 +219,7 @@ export default function Subscriptions() {
             price: ""
           }));
         }}
-        className="w-full rounded-md px-3 py-2 bg-white/90 text-gray-900 outline-none border border-transparent focus:border-teal-400"
+        className="w-full rounded-md px-3 py-2 bg-white/90 text-gray-900 outline-none border border-transparent focus:border-cyan-500"
       >
         <option value="">Choose a service</option>
         {Object.keys(STREAMING_SERVICES).map((service) => (
@@ -241,7 +241,7 @@ export default function Subscriptions() {
       onChange={(e) =>
         setForm((f) => ({ ...f, plan: e.target.value }))
       }
-      className="w-full rounded-md px-3 py-2 bg-white/90 text-gray-900 outline-none border border-transparent focus:border-teal-400"
+      className="w-full rounded-md px-3 py-2 bg-white/90 text-gray-900 outline-none border border-transparent focus:border-cyan-500"
     />
   ) : (
     /* Otherwise → show normal dropdown */
@@ -258,7 +258,7 @@ export default function Subscriptions() {
           }));
         }}
         disabled={!form.name}
-        className="w-full rounded-md px-3 py-2 bg-white/90 text-gray-900 outline-none border border-transparent focus:border-teal-400 disabled:bg-white/40 disabled:cursor-not-allowed"
+        className="w-full rounded-md px-3 py-2 bg-white/90 text-gray-900 outline-none border border-transparent focus:border-cyan-500 disabled:bg-white/40 disabled:cursor-not-allowed"
       >
         <option value="">{form.name ? "Choose a plan" : "Select a service first"}</option>
         {form.name &&
@@ -280,7 +280,7 @@ export default function Subscriptions() {
      setForm((f) => ({ ...f, price: e.target.value }))
    }
     disabled={form.name !== "Other"}
-   className={`w-full rounded-md px-3 py-2 bg-white/90 text-gray-900 outline-none border border-transparent focus:border-teal-400
+   className={`w-full rounded-md px-3 py-2 bg-white/90 text-gray-900 outline-none border border-transparent focus:border-cyan-500
       ${form.name !== "Other" ? "bg-white/60 text-gray-700 cursor-not-allowed" : ""}`}
       />
     </label>
@@ -291,7 +291,7 @@ export default function Subscriptions() {
       <select
         value={form.cycle}
         onChange={(e) => setForm((f) => ({ ...f, cycle: e.target.value }))}
-        className="w-full rounded-md px-3 py-2 bg-white/90 text-gray-900 outline-none border border-transparent focus:border-teal-400"
+        className="w-full rounded-md px-3 py-2 bg-white/90 text-gray-900 outline-none border border-transparent focus:border-cyan-500"
       >
         <option>Monthly</option>
         <option>Yearly</option>
@@ -305,7 +305,7 @@ export default function Subscriptions() {
         type="date"
         value={form.nextDate}
         onChange={(e) => setForm((f) => ({ ...f, nextDate: e.target.value }))}
-        className="w-full rounded-md px-3 py-2 bg-white/90 text-gray-900 outline-none border border-transparent focus:border-teal-400"
+        className="w-full rounded-md px-3 py-2 bg-white/90 text-gray-900 outline-none border border-transparent focus:border-cyan-500"
       />
     </label>
 
@@ -315,7 +315,7 @@ export default function Subscriptions() {
       <select
         value={form.status}
         onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
-        className="w-full rounded-md px-3 py-2 bg-white/90 text-gray-900 outline-none border border-transparent focus:border-teal-400"
+        className="w-full rounded-md px-3 py-2 bg-white/90 text-gray-900 outline-none border border-transparent focus:border-cyan-500"
       >
         <option>Active</option>
         <option>Paused</option>
@@ -327,7 +327,7 @@ export default function Subscriptions() {
     <div className="flex gap-3 sm:col-span-2 lg:col-span-3">
       <button
         type="submit"
-        className="px-5 py-2 rounded-full bg-gradient-to-r from-teal-400 to-purple-600 text-white font-semibold hover:opacity-90 transition"
+        className="px-5 py-2 rounded-full bg-gradient-to-r from-cyan-500 to-purple-600 text-white font-semibold hover:opacity-90 transition"
       >
         {editingId ? "Save changes" : "Add subscription"}
       </button>
@@ -479,7 +479,7 @@ function Input({ label, ...props }) {
       <div className="text-sm mb-1">{label}</div>
       <input
         {...props}
-        className={`w-full rounded-md px-3 py-2 bg-white/90 text-gray-900 outline-none border border-transparent focus:border-teal-400 ${props.className || ""}`}
+        className={`w-full rounded-md px-3 py-2 bg-white/90 text-gray-900 outline-none border border-transparent focus:border-cyan-500 ${props.className || ""}`}
       />
     </label>
   );
@@ -492,7 +492,7 @@ function Select({ label, value, onChange, options }) {
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-md px-3 py-2 bg-white/90 text-gray-900 outline-none border border-transparent focus:border-teal-400"
+        className="w-full rounded-md px-3 py-2 bg-white/90 text-gray-900 outline-none border border-transparent focus:border-cyan-500"
       >
         {options.map((opt) => (
           <option key={opt}>{opt}</option>

@@ -190,7 +190,8 @@ function normTv(t) {
       {/* HEADER */}
       <header className="text-center">
         <h1 className="text-4xl font-extrabold">
-          <span className="text-teal-300">Binge</span>Buddy
+          <span className="text-white">Binge</span>
+          <span className="text-cyan-400">Buddy</span>
         </h1>
         <p className="text-slate-200 mt-2">Your personal streaming dashboard</p>
       </header>
@@ -222,7 +223,7 @@ function normTv(t) {
                 <>
                   <Progress value={it.progress || 0} />
                   {isInWatchlist && (
-                    <div className="text-[10px] text-teal-300">✓ In Watchlist</div>
+                    <div className="text-[10px] text-cyan-300">✓ In Watchlist</div>
                   )}
                 </>
               }
@@ -334,7 +335,7 @@ function Card({ title, poster, kind, onClick, footer, mediaType, id, itemInfo })
 function Progress({ value }) {
   return (
     <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-      <div className="h-full bg-teal-400" style={{ width: `${value}%` }} />
+      <div className="h-full bg-cyan-400" style={{ width: `${value}%` }} />
     </div>
   );
 }

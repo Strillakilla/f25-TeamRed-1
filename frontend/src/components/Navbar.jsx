@@ -16,8 +16,8 @@ export default function Navbar() {
           className="h-10 w-auto rounded-lg"
       />
   <span className="text-xl font-bold">
-    <span className="text-teal-300">Binge</span>
-    <span className="text-white">Buddy</span>
+    <span className="text-white">Binge</span> 
+    <span className="text-cyan-400">Buddy</span>
     </span>
     </div>
       <nav className="flex gap-3">
