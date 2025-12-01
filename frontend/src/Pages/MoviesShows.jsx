@@ -562,13 +562,18 @@ export default function MoviesShows() {
     return la.localeCompare(lb);
   });
 
-  const languageOptions = Array.from(
-    new Set(results.map((r) => r.language).filter(Boolean))
-  ).sort((a, b) => {
-    const la = LANGUAGE_LABELS[a] || a;
-    const lb = LANGUAGE_LABELS[b] || b;
-    return la.localeCompare(lb);
-  });
+// Always include our predefined languages, plus any extra codes from results
+const languageOptions = Array.from(
+  new Set([
+    ...Object.keys(LANGUAGE_LABELS),                        // EN, FR, ES, etc.
+    ...results.map((r) => r.language).filter(Boolean),      // any others from TMDB
+  ])
+).sort((a, b) => {
+  const la = LANGUAGE_LABELS[a] || a;
+  const lb = LANGUAGE_LABELS[b] || b;
+  return la.localeCompare(lb);
+});
+
 
   const statusOptions = Array.from(
     new Set(results.map((r) => r.status).filter(Boolean))
