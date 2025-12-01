@@ -17,7 +17,7 @@ export default function AdRails({ position }) {
     >
       <div className="w-8 h-8 rounded-full bg-white/10 mb-2 flex items-center justify-center">
         <span className="text-lg">
-          {position === "left" ? "🎬" : "🍿"}
+          {position === "left" ? "🎞️" : "🍿"}
         </span>
       </div>
 
