@@ -21,6 +21,12 @@ export default function Watchlist() {
 
   const remove = (id) =>
     setItems((prev) => prev.filter((x) => x.id !== id));
+const updateWatchState = (id, state) =>
+  setItems((prev) =>
+    prev.map((it) =>
+      it.id === id ? { ...it, watchState: state } : it
+    )
+  );
 
   return (
     <div className="space-y-6">
@@ -36,9 +42,12 @@ export default function Watchlist() {
             <article
               key={it.id}
               className="bg-white/5 border border-white/10 rounded-xl overflow-hidden hover:bg-white/10 transition cursor-pointer"
-              onClick={() =>
-                navigate(`/details/${it.id}`, { state: { show: it } })
-              }
+onClick={() =>
+  navigate(`/details/${it.mediaType || "movie"}/${it.id}`, {
+    state: { show: it },
+  })
+}
+
             >
               {/* Poster */}
               <div className="w-full h-64 bg-white/10 flex items-center justify-center overflow-hidden">
@@ -60,6 +69,30 @@ export default function Watchlist() {
                   {it.year && `${it.year} • `}
                   {it.rating ? `⭐ ${it.rating}` : ""}
                 </p>
+
+<div
+  className="mt-2 flex items-center justify-between gap-2"
+  onClick={(e) => e.stopPropagation()}  // Prevent navigation
+>
+  <span className="inline-flex items-center rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-cyan-200">
+    {it.watchState === "watching"
+      ? "Currently watching"
+      : it.watchState === "watched"
+      ? "Already watched"
+      : "Planning to watch"}
+  </span>
+
+  <select
+    className="text-[10px] bg-slate-900/70 text-slate-100 border border-white/20 rounded-md px-2 py-1"
+    value={it.watchState || "planning"}
+    onChange={(e) => updateWatchState(it.id, e.target.value)}
+  >
+    <option value="planning">Planning to watch</option>
+    <option value="watching">Currently watching</option>
+    <option value="watched">Already watched</option>
+  </select>
+</div>
+
 
                 <button
                   className="mt-2 px-3 py-1 rounded-md bg-red-600 text-white text-xs hover:bg-red-500"
