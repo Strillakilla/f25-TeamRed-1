@@ -75,7 +75,7 @@ useEffect(() => {
           <div>
             <label className="block text-sm mb-1">Display name</label>
             <input
-              className="w-full rounded-md px-3 py-2 bg-white/90 text-gray-900 outline-none border border-transparent focus:border-teal-400"
+              className="w-full rounded-md px-3 py-2 bg-white/90 text-gray-900 outline-none border border-transparent focus:border-cyan-500"
               placeholder="Your name"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -98,7 +98,7 @@ useEffect(() => {
               type="submit"
               disabled={saving}
               className={`px-5 py-2 rounded-full text-white font-semibold transition
-                ${saving ? "bg-white/10 cursor-not-allowed" : "bg-gradient-to-r from-teal-400 to-purple-600 hover:opacity-90"}`}
+                ${saving ? "bg-white/10 cursor-not-allowed" : "bg-gradient-to-r from-cyan-500 to-purple-600 hover:opacity-90"}`}
             >
               {saving ? "Saving…" : "Save changes"}
             </button>

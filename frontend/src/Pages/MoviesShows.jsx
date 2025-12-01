@@ -94,7 +94,7 @@ function MultiSelectDropdown({ placeholder, options, selected, onChange }) {
     <div className="relative text-xs">
       <button
         type="button"
-        className="flex items-center justify-between gap-2 min-w-[150px] bg-slate-900/80 border border-slate-600 rounded-md px-3 py-2 text-slate-100 hover:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
+        className="flex items-center justify-between gap-2 min-w-[150px] bg-slate-900/80 border border-slate-600 rounded-md px-3 py-2 text-slate-100 hover:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-600"
         onClick={() => setOpen((prev) => !prev)}
       >
         <span className="truncate">{label}</span>
@@ -662,7 +662,7 @@ export default function MoviesShows() {
                 onClick={() => setFilterMode("quick")}
                 className={`px-3 py-1 ${
                   filterMode === "quick"
-                    ? "bg-teal-400 text-slate-900"
+                    ? "bg-cyan-400 text-slate-900"
                     : "bg-transparent text-slate-300"
                 }`}
               >
@@ -673,7 +673,7 @@ export default function MoviesShows() {
                 onClick={() => setFilterMode("advanced")}
                 className={`px-3 py-1 ${
                   filterMode === "advanced"
-                    ? "bg-teal-400 text-slate-900"
+                    ? "bg-cyan-400 text-slate-900"
                     : "bg-transparent text-slate-300"
                 }`}
               >
@@ -696,7 +696,7 @@ export default function MoviesShows() {
     type="button"
     onClick={() => setSafeOnly((prev) => !prev)}
     className={`relative inline-flex h-5 w-9 items-center rounded-full border transition-colors
-      ${safeOnly ? "bg-teal-500 border-teal-300" : "bg-slate-800 border-slate-500"}
+      ${safeOnly ? "bg-cyan-500 border-cyan-400" : "bg-slate-800 border-slate-500"}
     `}
   >
     <span
@@ -971,7 +971,7 @@ export default function MoviesShows() {
                     Type
                   </span>
                   {(includeTypes.length || excludeTypes.length) && (
-                    <span className="text-[10px] text-teal-300">
+                    <span className="text-[10px] text-cyan-400">
                       {includeTypes.length ? `+${includeTypes.length}` : ""}
                       {includeTypes.length && excludeTypes.length ? " · " : ""}
                       {excludeTypes.length ? `-${excludeTypes.length}` : ""}
@@ -1017,7 +1017,7 @@ export default function MoviesShows() {
                     Genres
                   </span>
                   {(includeGenres.length || excludeGenres.length) && (
-                    <span className="text-[10px] text-teal-300">
+                    <span className="text-[10px] text-cyan-400">
                       {includeGenres.length ? `+${includeGenres.length}` : ""}
                       {includeGenres.length && excludeGenres.length
                         ? " · "
@@ -1065,7 +1065,7 @@ export default function MoviesShows() {
                     Service
                   </span>
                   {(includeServices.length || excludeServices.length) && (
-                    <span className="text-[10px] text-teal-300">
+                    <span className="text-[10px] text-cyan-400">
                       {includeServices.length ? `+${includeServices.length}` : ""}
                       {includeServices.length && excludeServices.length
                         ? " · "
@@ -1115,7 +1115,7 @@ export default function MoviesShows() {
                     Language
                   </span>
                   {(includeLanguages.length || excludeLanguages.length) && (
-                    <span className="text-[10px] text-teal-300">
+                    <span className="text-[10px] text-cyan-400">
                       {includeLanguages.length
                         ? `+${includeLanguages.length}`
                         : ""}
@@ -1167,7 +1167,7 @@ export default function MoviesShows() {
                     Status
                   </span>
                   {(includeStatuses.length || excludeStatuses.length) && (
-                    <span className="text-[10px] text-teal-300">
+                    <span className="text-[10px] text-cyan-400">
                       {includeStatuses.length
                         ? `+${includeStatuses.length}`
                         : ""}
@@ -1320,7 +1320,7 @@ export default function MoviesShows() {
                   {r.language && ` • ${r.language}`}
                 </p>
                 <button
-                  className="mt-3 px-3 py-1 text-sm rounded-md bg-teal-500 text-white hover:bg-teal-400"
+                  className="mt-3 px-3 py-1 text-sm rounded-md bg-cyan-500 text-white hover:bg-cyan-600"
                   onClick={(e) => {
                     e.stopPropagation();
                     addToWatchlist(r);

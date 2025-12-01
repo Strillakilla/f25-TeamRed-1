@@ -22,7 +22,7 @@ export default function ForgotPassword() {
   if (submitted) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center">
-        <h1 className="text-3xl font-bold text-teal-300 mb-4">
+        <h1 className="text-3xl font-bold text-cyan-400 mb-4">
           Reset Link Sent!
         </h1>
         <p className="text-slate-200 max-w-md">
@@ -35,7 +35,7 @@ export default function ForgotPassword() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center">
-      <h1 className="text-3xl font-bold mb-4 text-teal-300">Forgot Password</h1>
+      <h1 className="text-3xl font-bold mb-4 text-cyan-400">Forgot Password</h1>
 
       <div className="bg-black/40 border border-white/10 rounded-2xl p-6 w-full max-w-md">
         <p className="mb-6 text-slate-200">
@@ -49,13 +49,13 @@ export default function ForgotPassword() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="w-full px-4 py-2 rounded-md bg-white/90 text-gray-900 outline-none 
-                       border border-transparent focus:border-teal-400"
+                       border border-transparent focus:border-cyan-500"
             required
           />
 
           <button
             type="submit"
-            className="w-full px-4 py-2 rounded-full bg-gradient-to-r from-teal-400 to-purple-600
+            className="w-full px-4 py-2 rounded-full bg-gradient-to-r from-cyan-500 to-purple-600
                        text-white font-semibold text-lg hover:opacity-90 transition"
           >
             Send Reset Link

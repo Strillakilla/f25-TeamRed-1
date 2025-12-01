@@ -98,7 +98,7 @@ export default function CreateAccountForm() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6">
       <div className="w-full max-w-md bg-black/40 border border-white/10 rounded-2xl p-6">
-        <h1 className="text-3xl font-bold mb-6 text-teal-300 text-center">Create Your Account</h1>
+        <h1 className="text-3xl font-bold mb-6 text-cyan-400 text-center">Create Your Account</h1>
 
         {toast && (
           <div className="mb-4 text-sm text-white bg-white/10 border border-white/15 rounded px-3 py-2 text-center">
@@ -112,7 +112,7 @@ export default function CreateAccountForm() {
             <label className="block text-sm mb-1">Email</label>
             <input
               type="email"
-              className="w-full rounded-md px-3 py-2 bg-white/90 text-gray-900 outline-none border border-transparent focus:border-teal-400"
+              className="w-full rounded-md px-3 py-2 bg-white/90 text-gray-900 outline-none border border-transparent focus:border-cyan-500"
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -129,7 +129,7 @@ export default function CreateAccountForm() {
             <div className="relative">
               <input
                 type={showPw ? "text" : "password"}
-                className="w-full rounded-md px-3 py-2 bg-white/90 text-gray-900 outline-none border border-transparent focus:border-teal-400 pr-24"
+                className="w-full rounded-md px-3 py-2 bg-white/90 text-gray-900 outline-none border border-transparent focus:border-cyan-500 pr-24"
                 placeholder="At least 8 characters"
                 value={pw}
                 onChange={(e) => setPw(e.target.value)}
@@ -153,7 +153,7 @@ export default function CreateAccountForm() {
                       : pwStrongScore === 3
                       ? "bg-yellow-400 w-2/4"
                       : pwStrongScore === 4
-                      ? "bg-teal-400 w-3/4"
+                      ? "bg-cyan-500 w-3/4"
                       : "bg-emerald-500 w-full"
                   }`}
                 />
@@ -177,7 +177,7 @@ export default function CreateAccountForm() {
             <div className="relative">
               <input
                 type={showPw2 ? "text" : "password"}
-                className="w-full rounded-md px-3 py-2 bg-white/90 text-gray-900 outline-none border border-transparent focus:border-teal-400 pr-24"
+                className="w-full rounded-md px-3 py-2 bg-white/90 text-gray-900 outline-none border border-transparent focus:border-cyan-500 pr-24"
                 placeholder="Re-enter password"
                 value={pw2}
                 onChange={(e) => setPw2(e.target.value)}
@@ -200,7 +200,7 @@ export default function CreateAccountForm() {
           <label className="flex items-center gap-2 text-sm">
             <input
               type="checkbox"
-              className="accent-teal-500"
+              className="accent-cyan-600"
               checked={agree}
               onChange={(e) => setAgree(e.target.checked)}
             />
@@ -217,7 +217,7 @@ export default function CreateAccountForm() {
             className={`w-full px-6 py-3 rounded-full font-semibold text-white transition
               ${
                 formValid && !submitting
-                  ? "bg-gradient-to-r from-teal-400 to-purple-600 hover:opacity-90"
+                  ? "bg-gradient-to-r from-cyan-500 to-purple-600 hover:opacity-90"
                   : "bg-white/10 cursor-not-allowed text-white/70"
               }`}
           >

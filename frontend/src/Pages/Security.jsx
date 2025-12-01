@@ -235,7 +235,7 @@ function LabeledInput({ label, className = "", ...props }) {
       <div className="text-sm mb-1">{label}</div>
       <input
         {...props}
-        className={`w-full rounded-md px-3 py-2 bg-white/90 text-gray-900 outline-none border border-transparent focus:border-teal-400 ${className}`}
+        className={`w-full rounded-md px-3 py-2 bg-white/90 text-gray-900 outline-none border border-transparent focus:border-cyan-500 ${className}`}
       />
     </label>
   );
@@ -263,7 +263,7 @@ function StrengthBar({ score }) {
         <div
           key={i}
           className={`h-1.5 flex-1 rounded ${
-            i < score ? "bg-teal-400" : "bg-white/10"
+            i < score ? "bg-cyan-500" : "bg-white/10"
           }`}
         />
       ))}
