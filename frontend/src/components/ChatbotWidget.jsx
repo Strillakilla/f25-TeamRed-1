@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import bot from "../assets/bot.png";
+import { isAuthed } from "../utils/auth";
+
 
 const STORAGE_KEY = "bb.chat.v1";
+const CHAT_ENDPOINT = "/api/query/classify";
 
 /**
  * ========= PREDETERMINED RESPONSES =========
@@ -334,6 +337,86 @@ function getMockReply(text) {
   return DEFAULT_REPLY;
 }
 
+// 🔹 Call backend AI (Spring QueryController → ChatbotService)
+async function callBackendChat(text) {
+  try {
+    const token = localStorage.getItem("bb.jwt");
+
+    const headers = {
+      "Content-Type": "application/json",
+      'Authorization': `Bearer ${token}`
+    };
+
+
+    // Log what we're about to send (no raw token)
+    console.log("Chatbot request:", {
+      url: 'http://localhost:8080/api/query/classify',
+      body: { query: text },
+      hasToken: !!token,
+      isAuthedFrontend: isAuthed(),
+    });
+
+    const res = await fetch('http://localhost:8080/api/query/classify', {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ query: text }), // backend expects { query: "..." }
+    });
+
+    console.log("Chatbot response status:", res.status);
+
+    // Read raw text so we can always log it
+    const rawText = await res.text();
+    console.log("Chatbot raw response body:", rawText);
+
+    // Auth failure or other error
+    if (!res.ok) {
+      if (res.status === 401 || res.status === 403) {
+        window.dispatchEvent(new Event("auth:expired"));
+      }
+      console.error("Chatbot HTTP error:", res.status, rawText);
+      throw new Error(`HTTP ${res.status}`);
+    }
+
+    // Try to parse JSON
+    let data;
+    try {
+      data = JSON.parse(rawText);
+    } catch (e) {
+      console.error("Failed to parse JSON from chatbot:", e);
+      return DEFAULT_REPLY;
+    }
+
+    console.log("Chatbot parsed JSON:", data);
+
+    // Case 1: wired to ChatbotService.handle(...)
+    // { success: true/false, message: string, results: [...], count: number }
+    if (typeof data.success === "boolean") {
+      if (data.success) {
+        const base = data.message || "Here are some results:";
+        const list = Array.isArray(data.results)
+          ? data.results.join("\n")
+          : "";
+        return list ? `${base}\n\n${list}` : base;
+      }
+      return data.message || DEFAULT_REPLY;
+    }
+
+    // Case 2: classify endpoint returns intent-only object
+    // e.g. { isValid, type, genre, sort, count, region, message }
+    if (typeof data.message === "string") {
+      return data.message;
+    }
+
+    // Fallback if shape is unexpected
+    return DEFAULT_REPLY;
+  } catch (err) {
+    console.error("Chatbot backend error (falling back to rules):", err);
+    return getMockReply(text);
+  }
+}
+
+
+
 /**
  * ========== COMPONENT ========== 
  */
@@ -356,7 +439,7 @@ export default function ChatbotWidget() {
     }
   }, [messages]);
 
-  function send() {
+  async function send() {
     const text = input.trim();
     if (!text) return;
 
@@ -369,16 +452,18 @@ export default function ChatbotWidget() {
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
 
-    setTimeout(() => {
-      const botMsg = {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        text: getMockReply(text),
-        ts: Date.now(),
-      };
-      setMessages((prev) => [...prev, botMsg]);
-    }, 350);
+    // 🔹 Ask backend (with fallback to local rules)
+    const replyText = await callBackendChat(text);
+
+    const botMsg = {
+      id: crypto.randomUUID(),
+      role: "assistant",
+      text: replyText,
+      ts: Date.now(),
+    };
+    setMessages((prev) => [...prev, botMsg]);
   }
+
 
   return (
     <>
