@@ -34,6 +34,8 @@ const GENRE_LABELS = {
   "53": "Thriller",
   "10752": "War",
   "37": "Western",
+  "10759": "Action & Adventure",
+  "10765": "Sci-Fi & Fantasy",
 };
 
 // Reusable multi-select "dropdown" with checkmarks
