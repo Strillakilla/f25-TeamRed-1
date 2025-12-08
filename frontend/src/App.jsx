@@ -29,13 +29,14 @@ export default function App() {
   const showNavbar = pathname !== "/get-started";
 
   // optional: boot-time invalid token cleanup
-  useEffect(() => {
-    const cleanup = onAuthExpired(() => {
-      localStorage.removeItem("bb.jwt");
-      window.location.replace("/login");
-    });
-    return cleanup;
-  }, []);
+useEffect(() => {
+  const handler = () => {
+    console.warn("Auth expired event received — redirect disabled for chatbot safety.");
+  };
+
+  window.addEventListener("auth:expired", handler);
+  return () => window.removeEventListener("auth:expired", handler);
+}, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-[#1A093A] to-[#2D0F4E] text-slate-100">

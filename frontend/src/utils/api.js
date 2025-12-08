@@ -26,10 +26,12 @@ export async function api(path, options = {}) {
   const res = await fetch(API_BASE + path, init);
 
   // Notify app on auth errors
-  if ((res.status === 401 || res.status === 403) && !isAuthPath(path)) {
-    clearToken();
-    window.dispatchEvent(new Event("auth:expired"));
-  }
+const isChatbotPath = path.startsWith("/api/query");
+
+if ((res.status === 401 || res.status === 403) && !isAuthPath(path) && !isChatbotPath) {
+  clearToken();
+  window.dispatchEvent(new Event("auth:expired"));
+}
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
