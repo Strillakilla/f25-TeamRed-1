@@ -75,6 +75,28 @@ public class MediaController {
         return ResponseEntity.ok(tmdbClient.get(endpoint, params));
     }
 
+    @GetMapping("/search/tv")
+    public ResponseEntity<Object> searchSeries(
+            @RequestParam String query,
+            @RequestParam(required = false) Boolean includeAdult,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) String language,
+            @RequestParam(required = false) String year,
+            @RequestParam(required = false, name = "first_air_date_year") String primaryReleaseYear) {
+
+        String endpoint = "/search/tv";
+        Map<String, Object> params = buildParams(
+                "query", query,
+                "include_adult", includeAdult,
+                "language", language,
+                "page", page,
+                "year", year,
+                "primary_release_year", primaryReleaseYear
+        );
+
+        return ResponseEntity.ok(tmdbClient.get(endpoint, params));
+    }
+
     // ================= MOVIE CALLS =================
 
     @Operation(

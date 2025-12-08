@@ -39,6 +39,7 @@ public class ChatbotService {
         String type = (String) intent.get("type");
         String genre = (String) intent.get("genre");
         String sort = (String) intent.get("sort");
+        String query = (String) intent.get("query");
         Number countNum = (Number) intent.get("count");
         int count = countNum != null ? countNum.intValue() : 10;
         String region = (String) intent.get("region");
@@ -73,6 +74,12 @@ public class ChatbotService {
             case "on_the_air":
                 endpoint = "/tv/on_the_air";
                 break;
+            case "search":
+                if (type.equals("movie")) endpoint = "/search/movie";
+                else if (type.equals("tv")) endpoint = "/search/tv";
+                else endpoint = "/search/multi";
+                if (query != null) params.put("query", query);
+                break;
             case "discover":
             default:
                 endpoint = "/discover/" + type;
@@ -87,38 +94,51 @@ public class ChatbotService {
         Map<String, Object> raw = (Map<String, Object>) tmdb.get(endpoint, params);
         List<Map<String, Object>> results = (List<Map<String, Object>>) raw.get("results");
 
+        // Filter out people if using multi-search
+        if ("/search/multi".equals(endpoint) && results != null) {
+            results = results.stream()
+                    .filter(item -> {
+                        String mediaType = (String) item.get("media_type");
+                        return "movie".equals(mediaType) || "tv".equals(mediaType);
+                    })
+                    .toList();
+        }
+
+        // Handle null or empty results
+        if (results == null || results.isEmpty()) {
+            return Map.of(
+                    "success", true,
+                    "message", "No results found. Try a different search or filter.",
+                    "results", List.of(),
+                    "count", 0
+            );
+        }
+
         // Format results into a nice list
         List<String> titles = results.stream()
                 .limit(count)
                 .map(item -> {
-                    String title = type.equals("movie") 
-                        ? (String) item.get("title") 
-                        : (String) item.get("name");
+                    // For multi-search, determine type from media_type field
+                    String itemType = type;
+                    if ("/search/multi".equals(endpoint)) {
+                        itemType = (String) item.get("media_type");
+                    }
+
+                    String title = "movie".equals(itemType)
+                            ? (String) item.get("title")
+                            : (String) item.get("name");
                     Double rating = (Double) item.get("vote_average");
-                    return String.format("%s (⭐ %.1f)", title, rating != null ? rating : 0.0);
+                    return String.format("%s (⭐ %.1f)\n", title, rating != null ? rating : 0.0);
                 })
-                .collect(Collectors.toList());
+                .toList();
 
         // Create response with AI-generated message
         return Map.of(
             "success", true,
-            "message", aiMessage != null ? aiMessage : "Here are your results:",
+            "message", aiMessage != null ? aiMessage + "\n" : "Here are your results:\n",
             "results", titles,
             "count", titles.size()
         );
     }
 
-    private String getCategoryLabel(String sort, String type) {
-        String mediaType = type.equals("movie") ? "Movies" : "TV Shows";
-        return switch (sort) {
-            case "popular" -> "Popular " + mediaType;
-            case "top_rated" -> "Top Rated " + mediaType;
-            case "trending" -> "Trending " + mediaType;
-            case "now_playing" -> "Now Playing Movies";
-            case "upcoming" -> "Upcoming Movies";
-            case "airing_today" -> "Airing Today";
-            case "on_the_air" -> "On The Air";
-            default -> mediaType;
-        };
-    }
 }
