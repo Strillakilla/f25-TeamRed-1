@@ -394,9 +394,9 @@ async function callBackendChat(text) {
       if (data.success) {
         const base = data.message || "Here are some results:";
         const list = Array.isArray(data.results)
-          ? data.results.join("\n")
+          ? data.results.map((item, index) => `${index + 1}. ${item}`).join("\n")
           : "";
-        return list ? `${base}\n\n${list}` : base;
+        return list ? `${base}\n${list}` : base;
       }
       return data.message || DEFAULT_REPLY;
     }
@@ -554,7 +554,7 @@ function Message({ role, text }) {
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
       <div
-        className={`max-w-[85%] rounded-xl px-3 py-2 text-sm leading-relaxed
+        className={`max-w-[85%] rounded-xl px-3 py-2 text-sm leading-relaxed whitespace-pre-line
           ${
             isUser
               ? "bg-teal-500/20 text-teal-100"
